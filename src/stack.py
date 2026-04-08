@@ -130,6 +130,13 @@ class Stack(LinkedList):
     def __init__(self, value = None):
         super().__init__(value)
 
+    def __str__(self):
+        list = []
+        for node in self:
+            list.append(node)
+        result = "\n".join(list)
+        return result
+
     def push(self, value):
         return super().add_head(value)
 

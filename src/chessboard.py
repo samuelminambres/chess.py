@@ -12,8 +12,8 @@ class Chessboard:
         self._grid = grid
         self._white_pieces_coords = []
         self._black_pieces_coords = []
-        self._white_king_coords = None
-        self._black_king_coords = None
+        self.white_king_coords = None
+        self.black_king_coords = None
         self.en_passant_target = None
 
     @property
@@ -117,11 +117,11 @@ class Chessboard:
         if piece.color == "W":
             self.white_pieces_coords.remove((x,y))
             if isinstance(piece, King):
-                self.white_king_coords = ()
+                self.white_king_coords = None
         else:
             self.black_pieces_coords.remove((x,y))
             if isinstance(piece, King):
-                self.black_king_coords = ()
+                self.black_king_coords = None
         self.grid[y][x] = None
         return True
 
