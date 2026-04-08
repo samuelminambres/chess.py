@@ -1,0 +1,144 @@
+class Piece:
+
+    def __init__(self, color):
+        self.color = color
+        self._directions = None
+    
+    @property
+    def color(self):
+        return self._color
+    
+    @color.setter
+    def color(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Color must be str")
+        if value != "W" and value != "B":
+            raise ValueError('Color must be "W" or "B"')
+        self._color = value
+
+    @property
+    def directions(self):
+        return self._directions
+
+    def get_possible_moves(self, x, y, board):
+        possible_moves = []
+        for dir_x, dir_y in self.directions:
+            current_x = x
+            current_y = y
+            while True:
+                current_x += dir_x
+                current_y += dir_y
+                if not (0 <= current_x <= 7 and 0 <= current_y <= 7):
+                    break
+                target = board.get_piece_at(current_x, current_y)
+                if target is None:
+                    possible_moves.append((current_x, current_y))
+                elif self.color != target.color:
+                    possible_moves.append((current_x, current_y))
+                    break
+                else:
+                    break
+        return possible_moves
+
+class Pawn(Piece):
+
+    def __init__(self, color):
+        super().__init__(color)
+        self._directions = (0,1) if self.color == "B" else (0,-1)
+
+    def __str__(self):
+        return "♟" if self.color == "W" else "♙"
+    
+    def tuple_print(self):
+        return ("♟", "♙")
+
+    def get_possible_moves(self, x, y, board):
+        possible_moves = []
+        dir_x = self.directions[0]
+        dir_y = self.directions[1]
+        end_x = x + dir_x
+        end_y = y + dir_y
+        if 0 <= end_y <= 7:
+            if board.get_piece_at(end_x, end_y) is None:
+                possible_moves.append((end_x, end_y))
+                if ((self.color == "W" and y == 6) or (self.color == "B" and y == 1)) and board.get_piece_at(end_x, y + 2*dir_y) is None:
+                    possible_moves.append((x, y + 2*dir_y))
+            if x - 1 >= 0:
+                target_left = board.get_piece_at(x - 1, end_y)
+                if target_left is not None and self.color != target_left.color:
+                    possible_moves.append((x - 1, end_y))
+            if x + 1 <= 7: 
+                target_right = board.get_piece_at(x + 1, end_y)
+                if target_right is not None and self.color != target_right.color:
+                    possible_moves.append((x + 1, end_y))
+        return possible_moves
+
+class Knight(Piece):
+    
+    def __init__(self, color):
+        super().__init__(color)
+        self._directions = [(1,2), (1,-2), (-1,2), (-1,-2), (2,1), (2,-1), (-2,1), (-2,-1)]
+    
+    def tuple_print(self):
+        return ("♞", "♘")
+
+    def get_possible_moves(self, x, y, board):
+        possible_moves = []
+        for dir_x, dir_y in self.directions:
+            end_x = x + dir_x
+            end_y = y + dir_y
+            if 0 <= end_x <= 7 and 0 <= end_y <= 7:
+                target = board.get_piece_at(end_x, end_y)
+                if target is None or target.color != self.color:
+                    possible_moves.append((end_x, end_y))
+        return possible_moves
+
+class Bishop(Piece):
+
+    def __init__(self, color):
+        super().__init__(color)
+        self._directions = [(1,1), (1,-1), (-1,1), (-1,-1)]
+
+    def tuple_print(self):
+        return ("♝", "♗")
+    
+class Rook(Piece):
+
+    def __init__(self, color):
+        super().__init__(color)
+        self._directions = [(1,0), (-1,0), (0,1), (0,-1)]
+    
+    def tuple_print(self):
+        return ("♜", "♖")
+
+class Queen(Piece):
+
+    def __init__(self, color):
+        super().__init__(color)
+        self._directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
+    
+    def tuple_print(self):
+        return ("♛", "♕")
+
+class King(Piece):
+
+    def __init__(self, color):
+        super().__init__(color)
+        self._directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
+    
+    def tuple_print(self):
+        return ("♚", "♔")
+
+    def get_possible_moves(self, x, y, board):
+        possible_moves = []
+        for dir_x, dir_y in self.directions:
+            end_x = x + dir_x
+            end_y = y + dir_y
+            if 0 <= end_x <= 7 and 0 <= end_y <= 7:
+                target = board.get_piece_at(end_x, end_y)
+                if target is None:
+                    possible_moves.append((end_x, end_y))
+                elif self.color != target.color:
+                    possible_moves.append((end_x, end_y))
+        return possible_moves
+                    
