@@ -12,8 +12,8 @@ class Chessboard:
         self._grid = grid
         self._white_pieces_coords = []
         self._black_pieces_coords = []
-        self._white_king_coords = ()
-        self._black_king_coords = ()
+        self._white_king_coords = None
+        self._black_king_coords = None
         self.en_passant_target = None
 
     @property
@@ -32,9 +32,31 @@ class Chessboard:
     def white_king_coords(self):
         return self._white_king_coords
     
+    @white_king_coords.setter
+    def white_king_coords(self, value):
+        if value is not None:
+            if not isinstance(value, tuple):
+                raise TypeError("King's coords must be tuple or None")
+            if len(value) != 2 or not isinstance(value[0], int) or not isinstance(value[1], int):
+                raise TypeError("Coords not valid")
+            if not (0 <= value[0] <= 7 and 0 <= value[1] <= 7):
+                raise TypeError("Coords not valid")
+        self._white_king_coords = value
+
     @property
     def black_king_coords(self):
         return self._black_king_coords
+    
+    @black_king_coords.setter
+    def black_king_coords(self, value):
+        if value is not None:
+            if not isinstance(value, tuple):
+                raise TypeError("King's coords must be tuple or None")
+            if len(value) != 2 or not isinstance(value[0], int) or not isinstance(value[1], int):
+                raise TypeError("Coords not valid")
+            if not (0 <= value[0] <= 7 and 0 <= value[1] <= 7):
+                raise TypeError("Coords not valid")
+        self._black_king_coords = value
     
     @property
     def en_passant_target(self):
@@ -42,16 +64,19 @@ class Chessboard:
     
     @en_passant_target.setter
     def en_passant_target(self, value):
-        if not isinstance(value, tuple) or value is None:
-            raise TypeError("En passant target must be coords (tuple) or None")
-        if len(value) != 2 or not isinstance(value[0], int) or not isinstance(value[1], int) or not (0 <= value[0] <= 7 and 0 <= value[1] <= 7):
-            raise TypeError("Coords not valid")
+        if value is not None:
+            if not isinstance(value, tuple):
+                raise TypeError("En passant target must be coords (tuple) or None")
+            if len(value) != 2 or not isinstance(value[0], int) or not isinstance(value[1], int):
+                raise TypeError("Coords not valid")
+            if not (0 <= value[0] <= 7 and 0 <= value[1] <= 7):
+                raise TypeError("Coords not valid")
         self._en_passant_target = value
 
     def __str__(self):
-        result = " A  B  C  D  E  F  G  H  "
+        result = "   A  B  C  D  E  F  G  H  "
         for y in range(8):
-            result += f"\n{8 - y}"
+            result += f"\n{8 - y} "
             for x in range(8):
                 square = self.grid[y][x]
                 is_light_square = (x + y) % 2 == 0
