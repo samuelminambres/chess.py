@@ -15,6 +15,74 @@ class Game:
         self.turn_time = time.time()
         self.history = Stack()
 
+    @property
+    def board(self):
+        return self._board
+    
+    @board.setter
+    def board(self, value):
+        if not isinstance(value, Chessboard):
+            raise TypeError("Board must be Chessboard")
+        self._board = value
+
+    @property
+    def turn(self):
+        return self._turn
+    
+    @turn.setter
+    def turn(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Turn must be str")
+        if value != "W" and value != "B":
+            raise ValueError('Turn must be "W" or "B"')
+        self._turn = value
+
+    @property
+    def white_timer(self):
+        return self._white_timer
+    
+    @white_timer.setter
+    def white_timer(self, value):
+        if not isinstance(value, float) and not isinstance(value, int):
+            raise TypeError("Time must be a number")
+        if value <= 0:
+            raise ValueError("Time must greater than 0")
+        self._white_timer = value
+    
+    @property
+    def black_timer(self):
+        return self._black_timer
+    
+    @black_timer.setter
+    def black_timer(self, value):
+        if not isinstance(value, float) and not isinstance(value, int):
+            raise TypeError("Time must be a number")
+        if value <= 0:
+            raise ValueError("Time must greater than 0")
+        self._black_timer = value
+
+    @property
+    def turn_time(self):
+        return self._turn_time
+    
+    @turn_time.setter
+    def turn_time(self, value):
+        if not isinstance(value, float):
+            raise TypeError("Turn time must be float")
+        if value <= 0:
+            raise ValueError("Turn time must be positive")
+        self._turn_time = value
+
+    @property
+    def history(self):
+        return self._history
+    
+    @history.setter
+    def history(self, value):
+        if not isinstance(value, Stack):
+            raise TypeError("History must be Stack")
+        self._history = value
+
     def __str__(self):
         result = ""
         for node in self.history:
@@ -108,9 +176,10 @@ class Game:
                 current_time = time.time()
                 time_spent = current_time - self.turn_time
                 if self.turn  == "W":
-                    self.white_timer -= time_spent
-                    if self.white_timer <= 0:
+                    if self.white_timer - time_spent <= 0:
                         return "TIMEOUT"
+                    else:
+                        self.white_timer -= time_spent
                     self.turn = "B"
                 else:
                     self.black_timer -= time_spent
