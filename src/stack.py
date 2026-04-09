@@ -1,5 +1,3 @@
-from utils import to_notation
-
 class Node:
 
     def __init__(self, value, next = None):
@@ -21,7 +19,7 @@ class Node:
     @next.setter
     def next(self, node):
         if not isinstance(node, Node) and node is not None:
-            raise TypeError("next must be Node")
+            raise TypeError("Next must be Node")
         self._next = node
 
     def __str__(self):

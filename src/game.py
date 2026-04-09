@@ -144,11 +144,32 @@ class Game:
                     legal_moves.append(((start_x, start_y), (end_x, end_y)))
                 self.undo_move()
         return legal_moves
+    
+    def pawn_promotion(self, x, y):
+        pawn = self.board.get_piece_at(x, y)
+        if not(y == 0 or y == 7) or not isinstance(pawn, Pawn):
+            return False
+        while True:
+            piece_to_promote = input("\nPawn promotion (Q, R, B, N): ").strip().upper()
+            self.board.remove_piece(x, y)
+            if piece_to_promote == "Q":
+                self.board.add_piece(Queen(pawn.color), x, y)
+            elif piece_to_promote == "R":
+                self.board.add_piece(Rook(pawn.color), x, y)
+            elif piece_to_promote == "B":
+                self.board.add_piece(Bishop(pawn.color), x, y)
+            elif piece_to_promote == "N":
+                self.board.add_piece(Knight(pawn.color), x, y)
+            else:
+                print("\nPiece invalid, try again")
+                continue
+            return True
 
     def play_move(self, notation_start, notation_end):
         coords_start = to_coords(notation_start)
         coords_end = to_coords(notation_end)
         legal_moves = self.get_all_legal_moves()
+        # Checkmate and stalemate comprobations
         if len(legal_moves) == 0:
             check = self.check()
             if check:
@@ -166,13 +187,13 @@ class Game:
                 else:
                     self.board.en_passant_target = None
                 # Pawn promotion
-                if (coords_end[1] == 0 or coords_end[1] == 7) and isinstance(piece, Pawn):
-                    self.board.remove_piece(coords_end[0], coords_end[1])
-                    self.board.add_piece(Queen(piece.color), coords_end[0], coords_end[1])
+                self.pawn_promotion(coords_end[0], coords_end[1])
+                # has_moved parameter comprobation for castling
                 if isinstance(piece, King):
                     piece.has_moved = True
                 elif isinstance(piece, Rook):
                     piece.has_moved = True
+                # Timer and swap turn logic
                 current_time = time.time()
                 time_spent = current_time - self.turn_time
                 if self.turn  == "W":

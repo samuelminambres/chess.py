@@ -97,7 +97,7 @@ class Chessboard:
         return result
 
     def add_piece(self, piece, x, y):
-        if self.grid[y][x] is not None:
+        if self.get_piece_at(x, y) is not None:
             return False
         self.grid[y][x] = piece
         if piece.color == "W":
