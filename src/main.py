@@ -13,23 +13,32 @@ while True:
 
     while True:
         print(game.board)
-        start = input("\nFrom (Ex: A1, G7): ")
-        end = input("To: ")
+        move_input = input('\nEnter move (e.g. e2e4) or "undo": ').strip().lower()
+        if move_input == "undo":
+            if game.history.length == 0:
+                print("\nError: no moves to undo, try again\n")
+                continue
+            game.undo_move()
+            game.turn = "B"
+            print("\nMove undone succesfully!\n")
+            break
+        start = move_input[:2]
+        end = move_input[2:]
         try:
             result = game.play_move(start, end)
         except ValueError:
-            print("\nError: square not valid, try again\n")
+            print("\nError: coords not valid, try again\n")
             continue
         if result == "INVALID":
             print("\nIllegal movement, try again\n")
             continue
         break
+    
+    if move_input == "undo":
+        continue
 
     if result == "SUCCESS":
-        print("\nSuccesful movement, your turn is over\n")
-        counter += 1
-        if counter >= 5:
-            print(game)
+        print("\nSuccesful movement!\n")
         continue
     elif result == "CHECKMATE":
         print("\n¡CHECKMATE! You lose")
