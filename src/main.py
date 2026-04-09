@@ -3,6 +3,8 @@ from utils import seg_to_min_seg
 
 game = Game()
 game.setup_standard_board()
+counter = 0
+
 while True:
     if game.turn == "W":
         print(f"Whites' turn: {seg_to_min_seg(game.white_timer)}\n")
@@ -25,6 +27,9 @@ while True:
 
     if result == "SUCCESS":
         print("\nSuccesful movement, your turn is over\n")
+        counter += 1
+        if counter >= 5:
+            print(game)
         continue
     elif result == "CHECKMATE":
         print("\n¡CHECKMATE! You lose")

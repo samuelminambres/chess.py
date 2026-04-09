@@ -65,11 +65,11 @@ class Pawn(Piece):
                     possible_moves.append((x, y + 2*dir_y))
             if x - 1 >= 0:
                 target_left = board.get_piece_at(x - 1, end_y)
-                if target_left is not None and self.color != target_left.color:
+                if (target_left is not None and self.color != target_left.color) or (x - 1, end_y) == board.en_passant_target:
                     possible_moves.append((x - 1, end_y))
             if x + 1 <= 7: 
                 target_right = board.get_piece_at(x + 1, end_y)
-                if target_right is not None and self.color != target_right.color:
+                if (target_right is not None and self.color != target_right.color) or (x + 1, end_y) == board.en_passant_target:
                     possible_moves.append((x + 1, end_y))
         return possible_moves
 
@@ -107,6 +107,7 @@ class Rook(Piece):
     def __init__(self, color):
         super().__init__(color)
         self._directions = [(1,0), (-1,0), (0,1), (0,-1)]
+        self.has_moved = False
     
     def tuple_print(self):
         return ("♜", "♖")
@@ -125,6 +126,7 @@ class King(Piece):
     def __init__(self, color):
         super().__init__(color)
         self._directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
+        self.has_moved = False
     
     def tuple_print(self):
         return ("♚", "♔")
@@ -140,5 +142,12 @@ class King(Piece):
                     possible_moves.append((end_x, end_y))
                 elif self.color != target.color:
                     possible_moves.append((end_x, end_y))
+        value = 7 if self.color == "W" else 0
+        right_rook = board.get_piece_at(7, value)
+        left_rook = board.get_piece_at(0, value)
+        if board.get_piece_at(x + 1, y) is None and board.get_piece_at(x + 2, y) is None and not self.has_moved and isinstance(right_rook, Rook) and not right_rook.has_moved:
+            possible_moves.append((x + 2, y))
+        if board.get_piece_at(x - 1, y) is None and board.get_piece_at(x - 2, y) is None and board.get_piece_at(x - 3, y) is None and not self.has_moved and isinstance(left_rook, Rook) and not left_rook.has_moved:
+            possible_moves.append((x - 2, y))
         return possible_moves
                     

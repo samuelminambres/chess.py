@@ -16,5 +16,17 @@ def to_coords(square):
         raise ValueError("Number must be between 1 and 8")
     return file.index(square[0]), y
 
+def to_notation(coords):
+    if not isinstance(coords, tuple):
+        raise TypeError("Coords must be tuple")
+    if len(coords) != 2:
+        raise ValueError("Length not valid")
+    if not isinstance(coords[0], int) or not isinstance(coords[1], int):
+        raise TypeError("Each coords must be int")
+    if not(0 <= coords[0] <= 7) or not(0 <= coords[1] <= 7):
+        raise ValueError("Coords not valid")
+    file = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    return file[coords[0]] + str(8 - coords[1])
+
 def seg_to_min_seg(s):
     return time.strftime("%M:%S", time.gmtime(s*1000 // 1000))

@@ -2,7 +2,8 @@ from chessboard import Chessboard
 from pieces import *
 from stack import Stack
 import time
-from utils import to_coords
+from utils import to_coords, to_notation
+import copy
 
 class Game:
 
@@ -14,6 +15,12 @@ class Game:
         self.turn_time = time.time()
         self.history = Stack()
 
+    def __str__(self):
+        result = ""
+        for node in self.history:
+            result += f"{type(node.value["piece"]).__name__}: {to_notation(node.value["start"])} -> {to_notation(node.value["end"])}\n\n{node.value["board_before"]}\n\n"
+        return result
+
     def setup_standard_board(self):
         for i in range(8):
             self.board.add_piece(Pawn("B"), i, 1)
@@ -22,6 +29,10 @@ class Game:
         for x, piece_class in enumerate(back_rank):
             self.board.add_piece(piece_class("B"), x, 0)
             self.board.add_piece(piece_class("W"), x, 7)
+
+    def undo_move(self):
+        last_move = self.history.pop()
+        self.board = last_move.value["board_before"]
 
     def check(self):
         if self.turn == "W":
@@ -37,20 +48,6 @@ class Game:
                 return True
         return False
 
-    def checkmate(self):
-        if not self.check():
-            return False
-        if len(self.get_all_legal_moves()) != 0:
-            return False
-        return True
-    
-    def stalemate(self):
-        if self.check():
-            return False
-        if len(self.get_all_legal_moves()) != 0:
-            return False
-        return True
-
     def get_all_legal_moves(self):
         legal_moves = []
         if self.turn == "W":
@@ -61,19 +58,23 @@ class Game:
             piece = self.board.get_piece_at(start_x, start_y)
             piece_moves = piece.get_possible_moves(start_x, start_y, self.board)
             for end_x, end_y in piece_moves:
-                # save piece
-                target = self.board.get_piece_at(end_x, end_y)
                 # simulate move
-                self.board.remove_piece(start_x, start_y)
-                self.board.add_piece(piece, end_x, end_y)
-                check = self.check()
-                # undo move
-                self.board.remove_piece(end_x, end_y)
-                self.board.add_piece(piece, start_x, start_y)
-                if target:
-                    self.board.add_piece(target, end_x, end_y)
-                if not check:
+                self.history.push({"piece": piece, "start": (start_x, start_y), "end": (end_x, end_y), "board_before": copy.deepcopy(self.board)})
+                self.board.move(start_x, start_y, end_x, end_y)
+                if not self.check():
+                    # castling comprobations
+                    if isinstance(piece, King) and abs(start_x - end_x) == 2:
+                        self.undo_move()
+                        was_in_check = self.check()
+                        dir_x = 1 if end_x > start_x else -1
+                        self.history.push({"piece": piece, "start": (start_x, start_y), "end": (start_x + dir_x, start_y), "board_before": copy.deepcopy(self.board)})
+                        self.board.move(start_x, start_y, start_x + dir_x, start_y)
+                        passed_trough_check = self.check()
+                        if was_in_check or passed_trough_check:
+                            self.undo_move()
+                            continue
                     legal_moves.append(((start_x, start_y), (end_x, end_y)))
+                self.undo_move()
         return legal_moves
 
     def play_move(self, notation_start, notation_end):
@@ -88,12 +89,22 @@ class Game:
         for legal_start, legal_end in legal_moves:
             if legal_start == coords_start and legal_end == coords_end:
                 piece = self.board.get_piece_at(coords_start[0], coords_start[1])
+                self.history.push({"piece": piece, "start": coords_start, "end": coords_end, "board_before": copy.deepcopy(self.board)})
                 self.board.move(coords_start[0], coords_start[1], coords_end[0], coords_end[1])
-                self.history.push(f"{type(piece).__name__}: {notation_start.upper()} -> {notation_end.upper()}")
+                # En passant
+                if isinstance(piece, Pawn) and abs(coords_end[1] - coords_start[1]) == 2:
+                    value = -1 if self.turn == "W" else 1
+                    self.board.en_passant_target = (coords_start[0], coords_start[1] + value)
+                else:
+                    self.board.en_passant_target = None
                 # Pawn promotion
                 if (coords_end[1] == 0 or coords_end[1] == 7) and isinstance(piece, Pawn):
                     self.board.remove_piece(coords_end[0], coords_end[1])
                     self.board.add_piece(Queen(piece.color), coords_end[0], coords_end[1])
+                if isinstance(piece, King):
+                    piece.has_moved = True
+                elif isinstance(piece, Rook):
+                    piece.has_moved = True
                 current_time = time.time()
                 time_spent = current_time - self.turn_time
                 if self.turn  == "W":

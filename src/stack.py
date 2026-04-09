@@ -1,3 +1,5 @@
+from utils import to_notation
+
 class Node:
 
     def __init__(self, value, next = None):
@@ -41,7 +43,7 @@ class LinkedList:
     
     @head.setter
     def head(self, node: Node):
-        if not isinstance(node, Node):
+        if not isinstance(node, Node) and node is not None:
             raise TypeError("Every value in LinkedList must be Node")
         self._head = node
 
@@ -93,7 +95,7 @@ class LinkedList:
     def remove_head(self):
         if self.is_empty():
             return False
-        self.head = self.head.next
+        self.head = self.head.next if self.head.next is not None else Node(None)
         self._length -= 1
         return True
     

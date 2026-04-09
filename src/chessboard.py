@@ -136,8 +136,29 @@ class Chessboard:
         if (end_x, end_y) not in possible_moves:
             return False
         target_piece = self.get_piece_at(end_x, end_y)
+        # Castling
+        if isinstance(piece, King) and abs(start_x - end_x) == 2:
+            # left rook
+            if start_x - end_x == 2:
+                self.remove_piece(start_x, start_y)
+                self.remove_piece(start_x - 4, start_y)
+                value = -1
+            # right rook
+            elif end_x - start_x == 2:
+                self.remove_piece(start_x, start_y)
+                self.remove_piece(start_x + 3, start_y)
+                value = 1
+            self.add_piece(Rook(piece.color), start_x + value, start_y)
+            self.add_piece(piece, start_x + 2*value, start_y)
+            rook = self.get_piece_at(start_x + value, start_y)
+            rook.has_moved = True
+            piece.has_moved = True
+            return True
         if target_piece is not None:
             self.remove_piece(end_x, end_y)
+        elif (end_x, end_y) == self.en_passant_target:
+            value = 1 if piece.color == "W" else -1
+            self.remove_piece(end_x, end_y + value)
         self.remove_piece(start_x, start_y)
         self.add_piece(piece, end_x, end_y)
         return True
