@@ -14,7 +14,7 @@ while True:
         print(game.board)
         move_input = input('\nEnter move (e.g. e2e4) or "undo": ').strip().lower()
         if move_input == "undo":
-            if game.history.length == 0:
+            if len(game.history) == 0:
                 print("\nError: no moves to undo, try again\n")
                 continue
             game.undo_move()
