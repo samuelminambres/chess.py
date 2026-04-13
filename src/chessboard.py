@@ -135,7 +135,7 @@ class Chessboard:
         possible_moves = piece.get_possible_moves(start_x, start_y, self)
         if (end_x, end_y) not in possible_moves:
             return False
-        game.history.push({"piece": piece, "target": self.get_piece_at(end_x, end_y), "start": (start_x, start_y), "end": (end_x, end_y), "en_passant_target": self.en_passant_target, "has_moved": piece.has_moved, "white_timer": game.white_timer, "black_timer": game.black_timer})
+        game.history.append({"piece": piece, "target": self.get_piece_at(end_x, end_y), "start": (start_x, start_y), "end": (end_x, end_y), "en_passant_target": self.en_passant_target, "has_moved": piece.has_moved, "white_timer": game.white_timer, "black_timer": game.black_timer})
         target_piece = self.get_piece_at(end_x, end_y)
         if target_piece is not None:
             self.remove_piece(end_x, end_y)

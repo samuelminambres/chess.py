@@ -1,6 +1,5 @@
 from chessboard import Chessboard
 from pieces import *
-from stack import Stack
 import time
 from utils import to_coords, to_notation
 
@@ -12,7 +11,7 @@ class Game:
         self.white_timer = time_limit
         self.black_timer = time_limit
         self.turn_time = time.time()
-        self.history = Stack()
+        self.history = []
 
     @property
     def board(self):
@@ -78,14 +77,14 @@ class Game:
     
     @history.setter
     def history(self, value):
-        if not isinstance(value, Stack):
-            raise TypeError("History must be Stack")
+        if not isinstance(value, list):
+            raise TypeError("History must be list")
         self._history = value
 
     def __str__(self):
         result = "Game history:"
-        for node in self.history:
-            result += f"\n{type(node.value["piece"]).__name__}: {to_notation(node.value["start"])} -> {to_notation(node.value["end"])}"
+        for move in self.history:
+            result += f"\n{type(move["piece"]).__name__}: {to_notation(move["start"])} -> {to_notation(move["end"])}"
         return result
 
     def setup_standard_board(self):
@@ -98,7 +97,7 @@ class Game:
             self.board.add_piece(piece_class("W"), x, 7)
 
     def undo_move(self):
-        last_move = self.history.pop().value
+        last_move = self.history.pop()
         piece = last_move["piece"]
         target = last_move["target"]
         start = last_move["start"]

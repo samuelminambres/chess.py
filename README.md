@@ -13,9 +13,6 @@ A terminal-based chess engine written from scratch in Python. It implements stan
 
 ## Technical Implementation
 
-Instead of relying entirely on native Python lists for state history, this project uses custom data structures to handle the game flow:
-
-* **Custom Stack and Linked List:** Move history is managed by a `Stack` and `LinkedList` built from scratch (`src/stack.py`). This allows for clean handling of history nodes and straightforward state retrieval for the undo functionality.
 * **Object-Oriented Design:** The core logic is modularized:
   * `pieces.py`: Base and derived classes that define piece-specific movement vectors and logic.
   * `chessboard.py`: Handles grid management, piece placement, and coordinate updates.
