@@ -128,34 +128,27 @@ class Chessboard:
     def get_piece_at(self, x, y):
         return self.grid[y][x]
     
-    def move(self, start_x, start_y, end_x, end_y):
+    def move(self, game, start_x, start_y, end_x, end_y):
         piece = self.get_piece_at(start_x, start_y)
         if piece is None:
             return False
         possible_moves = piece.get_possible_moves(start_x, start_y, self)
         if (end_x, end_y) not in possible_moves:
             return False
+        game.history.push({"piece": piece, "target": self.get_piece_at(end_x, end_y), "start": (start_x, start_y), "end": (end_x, end_y), "en_passant_target": self.en_passant_target, "has_moved": piece.has_moved, "white_timer": game.white_timer, "black_timer": game.black_timer})
         target_piece = self.get_piece_at(end_x, end_y)
-        # Castling
-        if isinstance(piece, King) and abs(start_x - end_x) == 2:
-            # left rook
-            if start_x - end_x == 2:
-                self.remove_piece(start_x, start_y)
-                self.remove_piece(start_x - 4, start_y)
-                value = -1
-            # right rook
-            elif end_x - start_x == 2:
-                self.remove_piece(start_x, start_y)
-                self.remove_piece(start_x + 3, start_y)
-                value = 1
-            self.add_piece(Rook(piece.color), start_x + value, start_y)
-            self.add_piece(piece, start_x + 2*value, start_y)
-            rook = self.get_piece_at(start_x + value, start_y)
-            rook.has_moved = True
-            piece.has_moved = True
-            return True
         if target_piece is not None:
             self.remove_piece(end_x, end_y)
+        # Castling
+        elif isinstance(piece, King) and abs(start_x - end_x) == 2:
+            # left rook
+            dir_x = 1 if end_x > start_x else -1
+            rook_x = 7 if end_x > start_x else 0
+            self.remove_piece(rook_x, start_y)
+            self.add_piece(Rook(piece.color), start_x + dir_x, start_y)
+            rook = self.get_piece_at(rook_x, start_y)
+            rook.has_moved = True
+            piece.has_moved = True
         elif (end_x, end_y) == self.en_passant_target:
             value = 1 if piece.color == "W" else -1
             self.remove_piece(end_x, end_y + value)

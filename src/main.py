@@ -3,7 +3,6 @@ from utils import seg_to_min_seg
 
 game = Game()
 game.setup_standard_board()
-counter = 0
 
 while True:
     if game.turn == "W":
@@ -19,7 +18,7 @@ while True:
                 print("\nError: no moves to undo, try again\n")
                 continue
             game.undo_move()
-            game.turn = "B"
+            game.turn = "B" if game.turn == "W" else "W"
             print("\nMove undone succesfully!\n")
             break
         start = move_input[:2]

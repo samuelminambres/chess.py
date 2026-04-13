@@ -3,7 +3,8 @@ class Piece:
     def __init__(self, color):
         self.color = color
         self._directions = None
-    
+        self.has_moved = None
+
     @property
     def color(self):
         return self._color
@@ -19,6 +20,16 @@ class Piece:
     @property
     def directions(self):
         return self._directions
+    
+    @property
+    def has_moved(self):
+        return self._has_moved
+    
+    @has_moved.setter
+    def has_moved(self, value):
+        if not isinstance(value, bool) and value is not None:
+            raise TypeError("Has moved must be bool")
+        self._has_moved = value
 
     def get_possible_moves(self, x, y, board):
         possible_moves = []
@@ -104,10 +115,10 @@ class Bishop(Piece):
     
 class Rook(Piece):
 
-    def __init__(self, color):
+    def __init__(self, color, has_moved = False):
         super().__init__(color)
         self._directions = [(1,0), (-1,0), (0,1), (0,-1)]
-        self.has_moved = False
+        self.has_moved = has_moved
     
     def tuple_print(self):
         return ("♜", "♖")
@@ -123,10 +134,10 @@ class Queen(Piece):
 
 class King(Piece):
 
-    def __init__(self, color):
+    def __init__(self, color, has_moved = False):
         super().__init__(color)
         self._directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
-        self.has_moved = False
+        self.has_moved = has_moved
     
     def tuple_print(self):
         return ("♚", "♔")
