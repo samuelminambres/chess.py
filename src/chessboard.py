@@ -141,13 +141,10 @@ class Chessboard:
             self.remove_piece(end_x, end_y)
         # Castling
         elif isinstance(piece, King) and abs(start_x - end_x) == 2:
-            # left rook
             dir_x = 1 if end_x > start_x else -1
             rook_x = 7 if end_x > start_x else 0
             self.remove_piece(rook_x, start_y)
-            self.add_piece(Rook(piece.color), start_x + dir_x, start_y)
-            rook = self.get_piece_at(rook_x, start_y)
-            rook.has_moved = True
+            self.add_piece(Rook(piece.color, True), start_x + dir_x, start_y)
             piece.has_moved = True
         elif (end_x, end_y) == self.en_passant_target:
             value = 1 if piece.color == "W" else -1

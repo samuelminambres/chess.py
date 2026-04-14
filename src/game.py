@@ -82,7 +82,7 @@ class Game:
         self._history = value
 
     def __str__(self):
-        result = "Game history:"
+        result = ""
         for move in self.history:
             result += f"\n{type(move["piece"]).__name__}: {to_notation(move["start"])} -> {to_notation(move["end"])}"
         return result
@@ -120,8 +120,9 @@ class Game:
         # en passant
         elif (end[0], end[1]) == last_move["en_passant_target"]:
             value = 1 if piece.color == "W" else -1
-            self.board.add_piece(Pawn(piece.color), end[0], end[1] + value)
-            self.board.en_passant_target = None
+            color = "B" if piece.color == "W" else "W"
+            self.board.add_piece(Pawn(color), end[0], end[1] + value)
+        self.board.en_passant_target = last_move["en_passant_target"]
                 
 
     def check(self):
@@ -185,9 +186,7 @@ class Game:
                 continue
             return True
 
-    def play_move(self, notation_start, notation_end):
-        coords_start = to_coords(notation_start)
-        coords_end = to_coords(notation_end)
+    def play_move(self, start, end):
         legal_moves = self.get_all_legal_moves()
         # Checkmate and stalemate comprobations
         if len(legal_moves) == 0:
@@ -196,17 +195,17 @@ class Game:
                 return "CHECKMATE"
             return "STALEMATE"
         for legal_start, legal_end in legal_moves:
-            if legal_start == coords_start and legal_end == coords_end:
-                piece = self.board.get_piece_at(coords_start[0], coords_start[1])
-                self.board.move(self, coords_start[0], coords_start[1], coords_end[0], coords_end[1])
+            if legal_start == start and legal_end == end:
+                piece = self.board.get_piece_at(start[0], start[1])
+                self.board.move(self, start[0], start[1], end[0], end[1])
                 # En passant
-                if isinstance(piece, Pawn) and abs(coords_end[1] - coords_start[1]) == 2:
+                if isinstance(piece, Pawn) and abs(end[1] - start[1]) == 2:
                     value = -1 if self.turn == "W" else 1
-                    self.board.en_passant_target = (coords_start[0], coords_start[1] + value)
+                    self.board.en_passant_target = (start[0], start[1] + value)
                 else:
                     self.board.en_passant_target = None
                 # Pawn promotion
-                self.pawn_promotion(coords_end[0], coords_end[1])
+                self.pawn_promotion(end[0], end[1])
                 # has_moved parameter comprobation for castling
                 if isinstance(piece, King):
                     piece.has_moved = True

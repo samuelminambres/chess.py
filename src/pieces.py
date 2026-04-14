@@ -156,9 +156,9 @@ class King(Piece):
         value = 7 if self.color == "W" else 0
         right_rook = board.get_piece_at(7, value)
         left_rook = board.get_piece_at(0, value)
-        if board.get_piece_at(x + 1, y) is None and board.get_piece_at(x + 2, y) is None and not self.has_moved and isinstance(right_rook, Rook) and not right_rook.has_moved:
+        if not self.has_moved and isinstance(right_rook, Rook) and not right_rook.has_moved and board.get_piece_at(x + 1, y) is None and board.get_piece_at(x + 2, y) is None:
             possible_moves.append((x + 2, y))
-        if board.get_piece_at(x - 1, y) is None and board.get_piece_at(x - 2, y) is None and board.get_piece_at(x - 3, y) is None and not self.has_moved and isinstance(left_rook, Rook) and not left_rook.has_moved:
+        if not self.has_moved and isinstance(left_rook, Rook) and not left_rook.has_moved and board.get_piece_at(x - 1, y) is None and board.get_piece_at(x - 2, y) is None and board.get_piece_at(x - 3, y) is None:
             possible_moves.append((x - 2, y))
         return possible_moves
                     

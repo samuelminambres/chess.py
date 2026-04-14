@@ -1,5 +1,5 @@
 from game import Game
-from utils import seg_to_min_seg
+from utils import seg_to_min_seg, to_coords
 
 game = Game()
 game.setup_standard_board()
@@ -24,7 +24,7 @@ while True:
         start = move_input[:2]
         end = move_input[2:]
         try:
-            result = game.play_move(start, end)
+            result = game.play_move(to_coords(start), to_coords(end))
         except ValueError:
             print("\nError: coords not valid, try again\n")
             continue
