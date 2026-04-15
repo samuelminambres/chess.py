@@ -1,7 +1,7 @@
 from chessboard import Chessboard
 from pieces import *
 import time
-from utils import to_coords, to_notation
+from utils import to_notation
 
 class Game:
 
