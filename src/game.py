@@ -84,7 +84,7 @@ class Game:
     def __str__(self):
         result = ""
         for move in self.history:
-            result += f"\n{type(move["piece"]).__name__}: {to_notation(move["start"])} -> {to_notation(move["end"])}"
+            result += f"{to_notation(move["start"])} -> {to_notation(move["end"])}\n"
         return result
 
     def setup_standard_board(self):
@@ -167,24 +167,25 @@ class Game:
         return legal_moves
     
     def pawn_promotion(self, x, y):
+        return (y == 0 or y == 7) and isinstance(self.board.get_piece_at(x, y), Pawn)
+    
+    def promotion_to(self, piece, x, y):
         pawn = self.board.get_piece_at(x, y)
-        if not(y == 0 or y == 7) or not isinstance(pawn, Pawn):
-            return False
-        while True:
-            piece_to_promote = input("\nPawn promotion (Q, R, B, N): ").strip().upper()
-            self.board.remove_piece(x, y)
-            if piece_to_promote == "Q":
-                self.board.add_piece(Queen(pawn.color), x, y)
-            elif piece_to_promote == "R":
-                self.board.add_piece(Rook(pawn.color, has_moved = True), x, y)
-            elif piece_to_promote == "B":
-                self.board.add_piece(Bishop(pawn.color), x, y)
-            elif piece_to_promote == "N":
-                self.board.add_piece(Knight(pawn.color), x, y)
-            else:
-                print("\nPiece invalid, try again")
-                continue
-            return True
+        self.board.remove_piece(x, y)
+        if piece == "Q":
+            self.board.add_piece(Queen(pawn.color), x, y)
+        elif piece == "R":
+            self.board.add_piece(Rook(pawn.color, has_moved = True), x, y)
+        elif piece == "B":
+            self.board.add_piece(Bishop(pawn.color), x, y)
+        elif piece == "N":
+            self.board.add_piece(Knight(pawn.color), x, y)
+
+    def swap_turn(self):
+        if self.turn == "W":
+            self.turn = "B"
+        else:
+            self.turn = "W"
 
     def play_move(self, start, end):
         legal_moves = self.get_all_legal_moves()
@@ -204,14 +205,12 @@ class Game:
                     self.board.en_passant_target = (start[0], start[1] + value)
                 else:
                     self.board.en_passant_target = None
-                # Pawn promotion
-                self.pawn_promotion(end[0], end[1])
                 # has_moved parameter comprobation for castling
                 if isinstance(piece, King):
                     piece.has_moved = True
                 elif isinstance(piece, Rook):
                     piece.has_moved = True
-                # Timer and swap turn logic
+                # Timer
                 current_time = time.time()
                 time_spent = current_time - self.turn_time
                 if self.turn  == "W":
@@ -219,12 +218,10 @@ class Game:
                         return "TIMEOUT"
                     else:
                         self.white_timer -= time_spent
-                    self.turn = "B"
                 else:
                     self.black_timer -= time_spent
                     if self.black_timer <= 0:
                         return "TIMEOUT"
-                    self.turn = "W"
                 self.turn_time = time.time()
                 return "SUCCESS"
         return "INVALID"

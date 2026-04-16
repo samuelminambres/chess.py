@@ -9,10 +9,10 @@ game = Game()
 game.setup_standard_board()
 
 running = True
-
+promotion = False
 selected_square = None
 while running:
-    gui.update_display(game, selected_square)
+    gui.update_display(game, selected_square, promotion)
     if not gui.timer(game):
         gui.show_result(game, "TIMEOUT")
         pygame.time.wait(5000)
@@ -22,7 +22,26 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x_mouse, y_mouse = pygame.mouse.get_pos()
-            if selected_square is None:
+            if promotion:
+                if 340 < y_mouse < 460:
+                    if 315 < x_mouse < 435:
+                        game.promotion_to("Q", end[0], end[1])
+                        promotion = False
+                        game.swap_turn()
+                    elif 465 < x_mouse < 585:
+                        game.promotion_to("R", end[0], end[1])
+                        promotion = False
+                        game.swap_turn()
+                    if 615 < x_mouse < 715:
+                        game.promotion_to("B", end[0], end[1])
+                        promotion = False
+                        game.swap_turn()
+                    if 765 < x_mouse < 865:
+                        game.promotion_to("N", end[0], end[1])
+                        promotion = False
+                        game.swap_turn()
+
+            elif selected_square is None:
                 selected_square = gui.translate_coords(x_mouse, y_mouse)
                 if x_mouse > 800:
                     # undo button
@@ -31,7 +50,7 @@ while running:
                             print("\nError: no moves to undo, try again\n")
                             continue
                         game.undo_move()
-                        game.turn = "B" if game.turn == "W" else "W"
+                        game.swap_turn()
                         game.turn_time = time.time()
                         print("Move undone succesfully!\n")
                     # restart button
@@ -48,13 +67,18 @@ while running:
                 selected_square = None
                 if result == "INVALID":
                     print("Illegal movement, try again\n")
-                    continue
-                if result == "SUCCESS":
-                    print("Succesful movement!\n")
-                    continue
+                elif result == "SUCCESS":
+                    promotion = game.pawn_promotion(end[0], end[1])
+                    if not promotion:
+                        game.swap_turn()
                 else:
                     gui.show_result(game, result)
                     pygame.time.wait(5000)
                     running = False
+        # scroll
+        elif event.type == pygame.MOUSEWHEEL:
+            scroll_sens = 5
+            gui.scroll_y += event.y * scroll_sens
+                
 pygame.quit()
 sys.exit()
