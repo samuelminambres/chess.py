@@ -1,6 +1,8 @@
 # chess.py
 
-A chess engine written from scratch in Python. Initially terminal-based, the project has now evolved and features a complete **Graphical User Interface (GUI)**. It implements standard FIDE rules and maintains a strong focus on object-oriented design for move validation and game state management.
+# Python Chess Engine
+
+A terminal-based chess engine written from scratch in Python. It implements standard FIDE rules and focuses on object-oriented design and custom data structures for move validation and state management.
 
 ## Features
 
@@ -37,4 +39,4 @@ To play, you need to have Python 3.10 or higher and the Pygame library installed
 
 ## License
 
-This project is distributed under the MIT License. See the license file included in the repository for more details.
+* This project is licensed under the MIT License - see the LICENSE file for details.
