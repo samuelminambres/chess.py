@@ -4,6 +4,7 @@ class Piece:
         self.color = color
         self._directions = None
         self.has_moved = None
+        self.value = None
 
     @property
     def color(self):
@@ -56,6 +57,7 @@ class Pawn(Piece):
     def __init__(self, color):
         super().__init__(color)
         self._directions = (0,1) if self.color == "B" else (0,-1)
+        self.value = 1
 
     def __str__(self):
         return "♟" if self.color == "W" else "♙"
@@ -89,6 +91,7 @@ class Knight(Piece):
     def __init__(self, color):
         super().__init__(color)
         self._directions = [(1,2), (1,-2), (-1,2), (-1,-2), (2,1), (2,-1), (-2,1), (-2,-1)]
+        self.value = 3
     
     def tuple_print(self):
         return ("♞", "♘")
@@ -109,6 +112,7 @@ class Bishop(Piece):
     def __init__(self, color):
         super().__init__(color)
         self._directions = [(1,1), (1,-1), (-1,1), (-1,-1)]
+        self.value = 3
 
     def tuple_print(self):
         return ("♝", "♗")
@@ -119,6 +123,7 @@ class Rook(Piece):
         super().__init__(color)
         self._directions = [(1,0), (-1,0), (0,1), (0,-1)]
         self.has_moved = has_moved
+        self.value = 5
     
     def tuple_print(self):
         return ("♜", "♖")
@@ -128,6 +133,7 @@ class Queen(Piece):
     def __init__(self, color):
         super().__init__(color)
         self._directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
+        self.value = 9
     
     def tuple_print(self):
         return ("♛", "♕")
@@ -138,6 +144,7 @@ class King(Piece):
         super().__init__(color)
         self._directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
         self.has_moved = has_moved
+        self.value = 900
     
     def tuple_print(self):
         return ("♚", "♔")

@@ -123,7 +123,6 @@ class Game:
             color = "B" if piece.color == "W" else "W"
             self.board.add_piece(Pawn(color), end[0], end[1] + value)
         self.board.en_passant_target = last_move["en_passant_target"]
-                
 
     def check(self):
         if self.turn == "W":
@@ -195,33 +194,22 @@ class Game:
             if check:
                 return "CHECKMATE"
             return "STALEMATE"
-        for legal_start, legal_end in legal_moves:
-            if legal_start == start and legal_end == end:
-                piece = self.board.get_piece_at(start[0], start[1])
-                self.board.move(self, start[0], start[1], end[0], end[1])
-                # En passant
-                if isinstance(piece, Pawn) and abs(end[1] - start[1]) == 2:
-                    value = -1 if self.turn == "W" else 1
-                    self.board.en_passant_target = (start[0], start[1] + value)
-                else:
-                    self.board.en_passant_target = None
-                # has_moved parameter comprobation for castling
-                if isinstance(piece, King):
-                    piece.has_moved = True
-                elif isinstance(piece, Rook):
-                    piece.has_moved = True
-                # Timer
-                current_time = time.time()
-                time_spent = current_time - self.turn_time
-                if self.turn  == "W":
-                    if self.white_timer - time_spent <= 0:
-                        return "TIMEOUT"
-                    else:
-                        self.white_timer -= time_spent
-                else:
-                    self.black_timer -= time_spent
-                    if self.black_timer <= 0:
-                        return "TIMEOUT"
-                self.turn_time = time.time()
-                return "SUCCESS"
-        return "INVALID"
+        if (start, end) not in legal_moves:
+            return "INVALID"
+        self.board.move(self, start[0], start[1], end[0], end[1])
+        # Timer
+        current_time = time.time()
+        time_spent = current_time - self.turn_time
+        if self.turn  == "W":
+            if self.white_timer - time_spent <= 0:
+                return "TIMEOUT"
+            else:
+                self.white_timer -= time_spent
+        else:
+            if self.black_timer - time_spent <= 0:
+                return "TIMEOUT"
+            else:
+                self.black_timer -= time_spent
+        self.turn_time = time.time()
+        return "SUCCESS"
+        

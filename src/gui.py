@@ -113,7 +113,10 @@ class Gui:
         scroll_difference = self.scroll_limits(game)
         if not scroll_difference:
             return None
-        bar = pygame.Surface((10, 435 + scroll_difference))
+        if scroll_difference > -435:
+            bar = pygame.Surface((10, 435 + scroll_difference))
+        else:
+            bar = pygame.Surface((10, 5))
         bar.fill(self.light_color)
         self.display.blit(bar, (1170, 257 - self.scroll_y))
 

@@ -3,11 +3,14 @@ import sys
 from game import Game
 from gui import Gui
 import time
+from ai import ChessAI
 
 gui = Gui()
 game = Game()
 game.setup_standard_board()
-
+white_bot = ChessAI(color = "W")
+black_bot = ChessAI(color = "B")
+AI_mode = True
 running = True
 promotion = False
 selected_square = None
@@ -17,11 +20,20 @@ while running:
         gui.show_result(game, "TIMEOUT")
         pygame.time.wait(5000)
         running = False
+    if AI_mode:
+        if game.turn == "W":
+            start, end = white_bot.get_best_move(game)
+        else:
+            start, end = black_bot.get_best_move(game)
+        game.play_move(start, end)
+        game.swap_turn()
+        continue
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x_mouse, y_mouse = pygame.mouse.get_pos()
+            # pawn promotion menu
             if promotion:
                 if 340 < y_mouse < 460:
                     if 315 < x_mouse < 435:
@@ -57,7 +69,7 @@ while running:
                     elif 1025 < x_mouse < 1175 and 725 < y_mouse < 775:
                         game = Game()
                         game.setup_standard_board()
-                        print("\nNew game!\n")
+                        print("New game!\n")
                     selected_square = None
                 elif game.board.get_piece_at(selected_square[0], selected_square[1]) is None:
                     selected_square = None
