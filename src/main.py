@@ -6,35 +6,52 @@ import time
 from ai import ChessAI
 
 gui = Gui()
-game = Game()
-game.setup_standard_board()
-white_bot = ChessAI(color = "W")
-black_bot = ChessAI(color = "B")
-AI_mode = True
 running = True
 promotion = False
 selected_square = None
+menu = True
+game = Game()
+ai_mode = False
+
 while running:
-    gui.update_display(game, selected_square, promotion)
-    if not gui.timer(game):
-        gui.show_result(game, "TIMEOUT")
-        pygame.time.wait(5000)
-        running = False
-    if AI_mode:
-        if game.turn == "W":
-            start, end = white_bot.get_best_move(game)
+    gui.update_display(game, selected_square, promotion, menu)
+    if ai_mode and game.turn == "B":
+        move = bot.get_best_move(game)
+        result = game.play_move(move[0], move[1])
+        if result == "SUCCESS":
+            promotion = game.pawn_promotion(move[1][0], move[1][1])
+            if promotion:
+                game.promotion_to("Q", move[1][0], move[1][1])
+            game.swap_turn()  
+        elif not gui.timer(game):
+            gui.show_result(game, "TIMEOUT")
+            pygame.time.wait(5000)
+            running = False
         else:
-            start, end = black_bot.get_best_move(game)
-        game.play_move(start, end)
-        game.swap_turn()
-        continue
+            gui.show_result(game, result)
+            pygame.time.wait(5000)
+            running = False
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x_mouse, y_mouse = pygame.mouse.get_pos()
             # pawn promotion menu
-            if promotion:
+            if menu:
+                if 310 < y_mouse < 580:
+                    if 320 < x_mouse < 590:
+                        bot = ChessAI()
+                        ai_mode = True
+                        menu = False
+                        game = Game()
+                        game.setup_standard_board()
+                    if 610 < x_mouse < 880:
+                        ai_mode = False
+                        menu = False
+                        game = Game()
+                        game.setup_standard_board()
+
+            elif promotion:
                 if 340 < y_mouse < 460:
                     if 315 < x_mouse < 435:
                         game.promotion_to("Q", end[0], end[1])
@@ -83,6 +100,10 @@ while running:
                     promotion = game.pawn_promotion(end[0], end[1])
                     if not promotion:
                         game.swap_turn()
+                elif not gui.timer(game):
+                    gui.show_result(game, "TIMEOUT")
+                    pygame.time.wait(5000)
+                    running = False
                 else:
                     gui.show_result(game, result)
                     pygame.time.wait(5000)

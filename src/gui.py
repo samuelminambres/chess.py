@@ -156,8 +156,29 @@ class Gui:
         self.display.blit(self.images[f"{game.turn}Rook"], (475, 350))
         self.display.blit(self.images[f"{game.turn}Bishop"], (625, 350))
         self.display.blit(self.images[f"{game.turn}Knight"], (775, 350))
+
+    def menu(self):
+        background_color = pygame.Surface((self.width, self.height))
+        background_color.fill(self.dark_color)
+        background = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        background.fill((0, 0, 0, 80))
+        self.display.blit(background_color, (0, 0))
+        self.display.blit(background, (0, 0))
+        pygame.draw.rect(self.display, self.dark_color, (300, 200, 600, 400))
+        pygame.draw.rect(self.display, self.light_color, (320, 310, 270, 270))
+        pygame.draw.rect(self.display, self.light_color, (610, 310, 270, 270))
+        text = pygame.font.Font(self.font, 30).render("Select game mode:", True, self.light_color)
+        self.display.blit(text, (345, 245))
+        ai = pygame.font.Font(self.font, 50).render("vs AI", True, self.dark_color)
+        self.display.blit(ai, (330, 415))
+        vs = pygame.font.Font(self.font, 63).render("1vs1", True, self.dark_color)
+        self.display.blit(vs, (620, 410))
     
-    def update_display(self, game, selected_square, promotion):
+    def update_display(self, game, selected_square, promotion, menu):
+        if menu:
+            self.menu()
+            pygame.display.flip()
+            return None
         self.draw_board()
         self.draw_information(game)
         # highlight selected square
