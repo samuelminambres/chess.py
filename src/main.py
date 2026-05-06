@@ -23,14 +23,16 @@ while running:
             if promotion:
                 game.promotion_to("Q", move[1][0], move[1][1])
             game.swap_turn()  
-        elif not gui.timer(game):
-            gui.show_result(game, "TIMEOUT")
-            pygame.time.wait(5000)
-            running = False
         else:
             gui.show_result(game, result)
             pygame.time.wait(5000)
             running = False
+    
+    if not gui.timer(game):
+        gui.show_result(game, "TIMEOUT")
+        pygame.time.wait(5000)
+        running = False
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -78,8 +80,12 @@ while running:
                         if len(game.history) == 0:
                             print("\nError: no moves to undo, try again\n")
                             continue
-                        game.undo_move()
-                        game.swap_turn()
+                        if ai_mode:
+                            game.undo_move()
+                            game.undo_move()
+                        else:
+                            game.undo_move()
+                            game.swap_turn()
                         game.turn_time = time.time()
                         print("Move undone succesfully!\n")
                     # restart button
@@ -100,10 +106,6 @@ while running:
                     promotion = game.pawn_promotion(end[0], end[1])
                     if not promotion:
                         game.swap_turn()
-                elif not gui.timer(game):
-                    gui.show_result(game, "TIMEOUT")
-                    pygame.time.wait(5000)
-                    running = False
                 else:
                     gui.show_result(game, result)
                     pygame.time.wait(5000)
