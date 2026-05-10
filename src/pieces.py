@@ -37,21 +37,21 @@ class Piece:
     def piece_square_table(self):
         return self._piece_square_table
 
-    def get_possible_moves(self, x, y, board):
+    def get_possible_moves(self, board, coords):
         possible_moves = []
         for dir_x, dir_y in self.directions:
-            current_x = x
-            current_y = y
+            current_x, current_y = coords
             while True:
                 current_x += dir_x
                 current_y += dir_y
+                current_coords = (current_x, current_y)
                 if not (0 <= current_x <= 7 and 0 <= current_y <= 7):
                     break
-                target = board.get_piece_at(current_x, current_y)
+                target = board.get_piece_at(current_coords)
                 if target is None:
-                    possible_moves.append((current_x, current_y))
+                    possible_moves.append(current_coords)
                 elif self.color != target.color:
-                    possible_moves.append((current_x, current_y))
+                    possible_moves.append(current_coords)
                     break
                 else:
                     break
@@ -80,23 +80,24 @@ class Pawn(Piece):
     def tuple_print(self):
         return ("♟", "♙")
 
-    def get_possible_moves(self, x, y, board):
+    def get_possible_moves(self, board, coords):
         possible_moves = []
-        dir_x = self.directions[0]
-        dir_y = self.directions[1]
+        x, y = coords
+        dir_x, dir_y = self.directions
         end_x = x + dir_x
         end_y = y + dir_y
+        end = (end_x, end_y)
         if 0 <= end_y <= 7:
-            if board.get_piece_at(end_x, end_y) is None:
-                possible_moves.append((end_x, end_y))
-                if ((self.color == "W" and y == 6) or (self.color == "B" and y == 1)) and board.get_piece_at(end_x, y + 2*dir_y) is None:
+            if board.get_piece_at(end) is None:
+                possible_moves.append(end)
+                if ((self.color == "W" and y == 6) or (self.color == "B" and y == 1)) and board.get_piece_at((end_x, y + 2*dir_y)) is None:
                     possible_moves.append((x, y + 2*dir_y))
             if x - 1 >= 0:
-                target_left = board.get_piece_at(x - 1, end_y)
+                target_left = board.get_piece_at((x - 1, end_y))
                 if (target_left is not None and self.color != target_left.color) or (x - 1, end_y) == board.en_passant_target:
                     possible_moves.append((x - 1, end_y))
             if x + 1 <= 7: 
-                target_right = board.get_piece_at(x + 1, end_y)
+                target_right = board.get_piece_at((x + 1, end_y))
                 if (target_right is not None and self.color != target_right.color) or (x + 1, end_y) == board.en_passant_target:
                     possible_moves.append((x + 1, end_y))
         return possible_moves
@@ -121,13 +122,14 @@ class Knight(Piece):
     def tuple_print(self):
         return ("♞", "♘")
 
-    def get_possible_moves(self, x, y, board):
+    def get_possible_moves(self, board, coords):
         possible_moves = []
+        x, y = coords
         for dir_x, dir_y in self.directions:
             end_x = x + dir_x
             end_y = y + dir_y
             if 0 <= end_x <= 7 and 0 <= end_y <= 7:
-                target = board.get_piece_at(end_x, end_y)
+                target = board.get_piece_at((end_x, end_y))
                 if target is None or target.color != self.color:
                     possible_moves.append((end_x, end_y))
         return possible_moves
@@ -214,23 +216,24 @@ class King(Piece):
     def tuple_print(self):
         return ("♚", "♔")
 
-    def get_possible_moves(self, x, y, board):
+    def get_possible_moves(self, board, coords):
         possible_moves = []
+        x, y = coords
         for dir_x, dir_y in self.directions:
             end_x = x + dir_x
             end_y = y + dir_y
             if 0 <= end_x <= 7 and 0 <= end_y <= 7:
-                target = board.get_piece_at(end_x, end_y)
+                target = board.get_piece_at((end_x, end_y))
                 if target is None:
                     possible_moves.append((end_x, end_y))
                 elif self.color != target.color:
                     possible_moves.append((end_x, end_y))
         value = 7 if self.color == "W" else 0
-        right_rook = board.get_piece_at(7, value)
-        left_rook = board.get_piece_at(0, value)
-        if not self.has_moved and isinstance(right_rook, Rook) and not right_rook.has_moved and board.get_piece_at(x + 1, y) is None and board.get_piece_at(x + 2, y) is None:
+        right_rook = board.get_piece_at((7, value))
+        left_rook = board.get_piece_at((0, value))
+        if not self.has_moved and isinstance(right_rook, Rook) and not right_rook.has_moved and board.get_piece_at((x + 1, y)) is None and board.get_piece_at((x + 2, y)) is None:
             possible_moves.append((x + 2, y))
-        if not self.has_moved and isinstance(left_rook, Rook) and not left_rook.has_moved and board.get_piece_at(x - 1, y) is None and board.get_piece_at(x - 2, y) is None and board.get_piece_at(x - 3, y) is None:
+        if not self.has_moved and isinstance(left_rook, Rook) and not left_rook.has_moved and board.get_piece_at((x - 1, y)) is None and board.get_piece_at((x - 2, y)) is None and board.get_piece_at((x - 3, y)) is None:
             possible_moves.append((x - 2, y))
         return possible_moves
                     

@@ -96,70 +96,75 @@ class Chessboard:
                         result += f"{bg_color} {square.tuple_print()[1]} {reset}"
         return result
 
-    def add_piece(self, piece, x, y):
-        if self.get_piece_at(x, y) is not None:
+    def add_piece(self, piece, coords):
+        if self.get_piece_at(coords) is not None:
             return False
+        x, y = coords
         self.grid[y][x] = piece
         if piece.color == "W":
-            self.white_pieces_coords.append((x,y))
+            self.white_pieces_coords.append(coords)
             if isinstance(piece, King):
-                self.white_king_coords = (x,y)
+                self.white_king_coords = coords
         else:
-            self.black_pieces_coords.append((x,y))
+            self.black_pieces_coords.append(coords)
             if isinstance(piece, King):
-                self.black_king_coords = (x,y)
+                self.black_king_coords = coords
         return True
 
-    def remove_piece(self, x, y):
-        piece = self.get_piece_at(x, y)
+    def remove_piece(self, coords):
+        piece = self.get_piece_at(coords)
         if piece is None:
             return False
+        x, y = coords
         if piece.color == "W":
-            self.white_pieces_coords.remove((x,y))
+            self.white_pieces_coords.remove(coords)
             if isinstance(piece, King):
                 self.white_king_coords = None
         else:
-            self.black_pieces_coords.remove((x,y))
+            self.black_pieces_coords.remove(coords)
             if isinstance(piece, King):
                 self.black_king_coords = None
         self.grid[y][x] = None
         return True
 
-    def get_piece_at(self, x, y):
+    def get_piece_at(self, coords):
+        x, y = coords
         return self.grid[y][x]
     
-    def move(self, game, start_x, start_y, end_x, end_y):
-        piece = self.get_piece_at(start_x, start_y)
+    def move(self, game, start, end):
+        piece = self.get_piece_at(start)
         if piece is None:
             return False
-        possible_moves = piece.get_possible_moves(start_x, start_y, self)
-        if (end_x, end_y) not in possible_moves:
+        possible_moves = piece.get_possible_moves(self, start)
+        if end not in possible_moves:
             return False
-        game.history.append({"piece": piece, "target": self.get_piece_at(end_x, end_y), "start": (start_x, start_y), "end": (end_x, end_y), "en_passant_target": self.en_passant_target, "has_moved": piece.has_moved, "white_timer": game.white_timer, "black_timer": game.black_timer})
-        target_piece = self.get_piece_at(end_x, end_y)
+        game.history.append({"piece": piece, "target": self.get_piece_at(end), "start": start, "end": end, "en_passant_target": self.en_passant_target, "has_moved": piece.has_moved, "white_timer": game.white_timer, "black_timer": game.black_timer})
+        target_piece = self.get_piece_at(end)
         if target_piece is not None:
-            self.remove_piece(end_x, end_y)
+            self.remove_piece(end)
         # Castling
+        start_x, start_y = start
+        end_x, end_y = end
         if isinstance(piece, King) and abs(start_x - end_x) == 2:
             dir_x = 1 if end_x > start_x else -1
             rook_x = 7 if end_x > start_x else 0
-            self.remove_piece(rook_x, start_y)
-            self.add_piece(Rook(piece.color, True), start_x + dir_x, start_y)
+            self.remove_piece((rook_x, start_y))
+            self.add_piece(Rook(piece.color, True), (start_x + dir_x, start_y))
             piece.has_moved = True
         elif isinstance(piece, King):
             piece.has_moved = True
         elif isinstance(piece, Rook):
             piece.has_moved = True
         # En passant
-        if isinstance(piece, Pawn) and (end_x, end_y) == self.en_passant_target:
+        if isinstance(piece, Pawn) and end == self.en_passant_target:
             value = 1 if piece.color == "W" else -1
-            self.remove_piece(end_x, end_y + value)
+            self.remove_piece((end_x, end_y + value))
             self.en_passant_target = None
         elif isinstance(piece, Pawn) and abs(end_y - start_y) == 2:
             value = -1 if piece.color == "W" else 1
             self.en_passant_target = (start_x, start_y + value)
         else:
             self.en_passant_target = None
-        self.remove_piece(start_x, start_y)
-        self.add_piece(piece, end_x, end_y)
+        self.remove_piece(start)
+        self.add_piece(piece, end)
         return True

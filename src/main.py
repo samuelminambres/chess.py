@@ -16,12 +16,12 @@ ai_mode = False
 while running:
     gui.update_display(game, selected_square, promotion, menu)
     if ai_mode and game.turn == "B":
-        move = bot.get_best_move(game)
-        result = game.play_move(move[0], move[1])
+        start, end = bot.get_best_move(game)
+        result = game.play_move(start, end)
         if result == "SUCCESS":
-            promotion = game.pawn_promotion(move[1][0], move[1][1])
+            promotion = game.pawn_promotion(end)
             if promotion:
-                game.promotion_to("Q", move[1][0], move[1][1])
+                game.promotion_to("Q", end)
             game.swap_turn()  
         else:
             gui.show_result(game, result)
@@ -56,19 +56,19 @@ while running:
             elif promotion:
                 if 340 < y_mouse < 460:
                     if 315 < x_mouse < 435:
-                        game.promotion_to("Q", end[0], end[1])
+                        game.promotion_to("Q", end)
                         promotion = False
                         game.swap_turn()
                     elif 465 < x_mouse < 585:
-                        game.promotion_to("R", end[0], end[1])
+                        game.promotion_to("R", end)
                         promotion = False
                         game.swap_turn()
                     if 615 < x_mouse < 715:
-                        game.promotion_to("B", end[0], end[1])
+                        game.promotion_to("B", end)
                         promotion = False
                         game.swap_turn()
                     if 765 < x_mouse < 865:
-                        game.promotion_to("N", end[0], end[1])
+                        game.promotion_to("N", end)
                         promotion = False
                         game.swap_turn()
 
@@ -94,7 +94,7 @@ while running:
                         game.setup_standard_board()
                         print("New game!\n")
                     selected_square = None
-                elif game.board.get_piece_at(selected_square[0], selected_square[1]) is None:
+                elif game.board.get_piece_at(selected_square) is None:
                     selected_square = None
             else:
                 end = gui.translate_coords(x_mouse, y_mouse)
@@ -103,7 +103,7 @@ while running:
                 if result == "INVALID":
                     print("Illegal movement, try again\n")
                 elif result == "SUCCESS":
-                    promotion = game.pawn_promotion(end[0], end[1])
+                    promotion = game.pawn_promotion(end)
                     if not promotion:
                         game.swap_turn()
                 else:

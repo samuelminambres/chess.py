@@ -39,7 +39,7 @@ class Gui:
     def draw_pieces(self, board):
         for y in range(8):
             for x in range(8):
-                piece = board.get_piece_at(x, y)
+                piece = board.get_piece_at((x, y))
                 if piece is None:
                     continue
                 texture = piece.color + type(piece).__name__

@@ -34,11 +34,11 @@ class ChessAI:
             return None
         best_eval = float("-inf") if self.color == "W" else float("inf")
         for start, end in legal_moves:
-            move = game.board.move(game, start[0], start[1], end[0], end[1])
+            move = game.board.move(game, start, end)
             if not move:
                 continue
-            if game.pawn_promotion(end[0], end[1]):
-                game.promotion_to("Q", end[0], end[1])
+            if game.pawn_promotion(end):
+                game.promotion_to("Q", end)
             game.swap_turn()
             is_maximizing = self.color == "B"
             eval = self.minimax(game, depth = self.depth - 1, is_maximizing = is_maximizing)
@@ -58,11 +58,11 @@ class ChessAI:
         if is_maximizing:
             max_eval = float("-inf")
             for start, end in legal_moves:
-                move = game.board.move(game, start[0], start[1], end[0], end[1])
+                move = game.board.move(game, start, end)
                 if not move:
                     continue
-                if game.pawn_promotion(end[0], end[1]):
-                    game.promotion_to("Q", end[0], end[1])
+                if game.pawn_promotion(end):
+                    game.promotion_to("Q", end)
                 game.swap_turn()
                 eval = self.minimax(game, depth = depth - 1, is_maximizing = False, alpha = alpha, beta = beta)
                 game.undo_move()
@@ -75,11 +75,11 @@ class ChessAI:
         else:
             min_eval = float("inf")
             for start, end in legal_moves:
-                move = game.board.move(game, start[0], start[1], end[0], end[1])
+                move = game.board.move(game, start, end)
                 if not move:
                     continue
-                if game.pawn_promotion(end[0], end[1]):
-                    game.promotion_to("Q", end[0], end[1])
+                if game.pawn_promotion(end):
+                    game.promotion_to("Q", end)
                 game.swap_turn()
                 eval = self.minimax(game, depth = depth - 1, is_maximizing = True, alpha = alpha, beta = beta)
                 game.undo_move()
@@ -93,9 +93,9 @@ class ChessAI:
     def evaluate(self, board):
         evaluation = 0
         for x, y in board.white_pieces_coords:
-            piece = board.get_piece_at(x, y)
+            piece = board.get_piece_at((x, y))
             evaluation += piece.value + piece.piece_square_table[y][x]
         for x, y in board.black_pieces_coords:
-            piece = board.get_piece_at(x, y)
+            piece = board.get_piece_at((x, y))
             evaluation -= piece.value + piece.piece_square_table[7-y][x]
         return evaluation
