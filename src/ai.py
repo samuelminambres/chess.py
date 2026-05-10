@@ -94,8 +94,8 @@ class ChessAI:
         evaluation = 0
         for x, y in board.white_pieces_coords:
             piece = board.get_piece_at(x, y)
-            evaluation += piece.value
+            evaluation += piece.value + piece.piece_square_table[y][x]
         for x, y in board.black_pieces_coords:
             piece = board.get_piece_at(x, y)
-            evaluation -= piece.value
+            evaluation -= piece.value + piece.piece_square_table[7-y][x]
         return evaluation
