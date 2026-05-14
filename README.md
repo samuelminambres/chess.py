@@ -4,9 +4,8 @@ A complete chess engine and graphical interface developed from scratch. This pro
 
 The main goal of this project is to apply software architecture skills: Object-Oriented Programming (OOP) principles, separation of concerns, and efficient data structures for game state management.
 
-<img src="assets/demo/game_demo.gif" width="100" alt="Gameplay">
-
-<img src="assets/images/coronation_menu.png" width="100" alt="Coronation menu">
+<img src="assets/demo/menu.png" width="300" alt="Mode selection menu">
+<img src="assets/demo/gameplay.gif" width="300" alt="Coronation menu showcase">
 
 ## Key Features
 
