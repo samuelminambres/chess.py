@@ -4,6 +4,10 @@ A complete chess engine and graphical interface developed from scratch. This pro
 
 The main goal of this project is to apply software architecture skills: Object-Oriented Programming (OOP) principles, separation of concerns, and efficient data structures for game state management.
 
+<img width="1204" height="824" alt="game_demo" src="https://github.com/user-attachments/assets/21474807-d0fe-46c7-8913-f546bac4a38b" />
+
+<img width="1204" height="829" alt="coronation_menu" src="https://github.com/user-attachments/assets/3977219f-c7dc-4b21-8149-a32f07b4cce8" />
+
 ## Key Features
 
 * **Complete FIDE Rules Engine:** Implementation of all standard and special moves, including En Passant, pawn promotion, and castling (with passing-through-check validation).
