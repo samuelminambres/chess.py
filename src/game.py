@@ -67,7 +67,7 @@ class Game:
     def __str__(self):
         result = ""
         for move in self.history:
-            result += f"{to_notation(move["start"])} -> {to_notation(move["end"])}\n"
+            result += f"{to_notation(move.start)} -> {to_notation(move.end)}\n"
         return result
 
     def setup_standard_board(self):

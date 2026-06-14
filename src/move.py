@@ -1,3 +1,5 @@
+from pieces import Piece
+
 class Move:
 
     def __init__(self, start: tuple, end: tuple, piece: Piece, target = None, en_passant_target = None, has_moved: bool = False):
