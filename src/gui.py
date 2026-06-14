@@ -1,7 +1,5 @@
 import pygame
 import os
-from utils import seg_to_min_seg
-import time
 from math import ceil
 
 class Gui:
@@ -83,19 +81,14 @@ class Gui:
         self.display.blit(restart, (1031, 741))
 
     def timer(self, game):
-        time_spent = time.time() - game.turn_time
-        if game.turn == "W":
-            current_time = game.white_timer - time_spent  
-            turn = "Whites'"
-        else:
-            current_time = game.black_timer - time_spent
-            turn = "Blacks'"
-        if current_time <= 0:
+        turn = "Whites'" if game.turn == "W" else "Blacks'"
+        timer = game.white_timer if game.turn == "W" else game.black_timer
+        if timer.is_timeout():
             return False
         turn_line = pygame.font.Font(self.font, 32).render(f"{turn}turn", True, self.light_color)
-        timer = pygame.font.Font(self.font, 28).render(seg_to_min_seg(current_time), True, self.light_color)
+        timer_shown = pygame.font.Font(self.font, 28).render(str(timer), True, self.light_color)
         self.display.blit(turn_line, (825, 50))
-        self.display.blit(timer, (930, 100))
+        self.display.blit(timer_shown, (930, 100))
         return True
     
     def scroll_limits(self, game):

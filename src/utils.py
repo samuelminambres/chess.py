@@ -27,6 +27,3 @@ def to_notation(coords):
         raise ValueError("Coords not valid")
     file = ["A", "B", "C", "D", "E", "F", "G", "H"]
     return file[coords[0]] + str(8 - coords[1])
-
-def seg_to_min_seg(s):
-    return time.strftime("%M:%S", time.gmtime(s*1000 // 1000))

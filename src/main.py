@@ -11,6 +11,7 @@ promotion = False
 selected_square = None
 menu = True
 game = Game()
+game.setup_standard_board()
 ai_mode = False
 
 while running:
@@ -22,7 +23,7 @@ while running:
             promotion = game.pawn_promotion(end)
             if promotion:
                 game.promotion_to("Q", end)
-            game.swap_turn()  
+            game.swap_turn()
         else:
             gui.show_result(game, result)
             pygame.time.wait(5000)
@@ -45,13 +46,11 @@ while running:
                         bot = ChessAI()
                         ai_mode = True
                         menu = False
-                        game = Game()
-                        game.setup_standard_board()
+                        game.white_timer.start()
                     if 610 < x_mouse < 880:
                         ai_mode = False
                         menu = False
-                        game = Game()
-                        game.setup_standard_board()
+                        game.white_timer.start()
 
             elif promotion:
                 if 340 < y_mouse < 460:

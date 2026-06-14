@@ -1,4 +1,5 @@
 from pieces import *
+from move import Move
 
 class Chessboard:
 
@@ -99,32 +100,43 @@ class Chessboard:
     def add_piece(self, piece, coords):
         if self.get_piece_at(coords) is not None:
             return False
+        
         x, y = coords
         self.grid[y][x] = piece
+
         if piece.color == "W":
             self.white_pieces_coords.append(coords)
+
             if isinstance(piece, King):
                 self.white_king_coords = coords
         else:
             self.black_pieces_coords.append(coords)
+
             if isinstance(piece, King):
                 self.black_king_coords = coords
         return True
 
     def remove_piece(self, coords):
         piece = self.get_piece_at(coords)
+
         if piece is None:
             return False
+        
         x, y = coords
+
         if piece.color == "W":
             self.white_pieces_coords.remove(coords)
+
             if isinstance(piece, King):
                 self.white_king_coords = None
         else:
             self.black_pieces_coords.remove(coords)
+
             if isinstance(piece, King):
                 self.black_king_coords = None
+
         self.grid[y][x] = None
+
         return True
 
     def get_piece_at(self, coords):
@@ -133,18 +145,25 @@ class Chessboard:
     
     def move(self, game, start, end):
         piece = self.get_piece_at(start)
+
         if piece is None:
             return False
+        
         possible_moves = piece.get_possible_moves(self, start)
+
         if end not in possible_moves:
             return False
-        game.history.append({"piece": piece, "target": self.get_piece_at(end), "start": start, "end": end, "en_passant_target": self.en_passant_target, "has_moved": piece.has_moved, "white_timer": game.white_timer, "black_timer": game.black_timer})
-        target_piece = self.get_piece_at(end)
-        if target_piece is not None:
+        
+        target = self.get_piece_at(end)
+        game.history.append(Move(start, end, piece, target = target, en_passant_target = self.en_passant_target, has_moved = piece.has_moved))
+        
+        if target is not None:
             self.remove_piece(end)
+        
         # Castling
         start_x, start_y = start
         end_x, end_y = end
+
         if isinstance(piece, King) and abs(start_x - end_x) == 2:
             dir_x = 1 if end_x > start_x else -1
             rook_x = 7 if end_x > start_x else 0
@@ -155,6 +174,7 @@ class Chessboard:
             piece.has_moved = True
         elif isinstance(piece, Rook):
             piece.has_moved = True
+
         # En passant
         if isinstance(piece, Pawn) and end == self.en_passant_target:
             value = 1 if piece.color == "W" else -1
@@ -165,6 +185,7 @@ class Chessboard:
             self.en_passant_target = (start_x, start_y + value)
         else:
             self.en_passant_target = None
+        
         self.remove_piece(start)
         self.add_piece(piece, end)
         return True

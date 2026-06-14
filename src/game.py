@@ -1,16 +1,15 @@
 from chessboard import Chessboard
 from pieces import *
-import time
 from utils import to_notation
+from timer import Timer
 
 class Game:
 
-    def __init__(self, time_limit = 600.0):
+    def __init__(self, time_limit = 600.0, increment = 0.0):
         self.board = Chessboard()
         self.turn = "W"
-        self.white_timer = time_limit
-        self.black_timer = time_limit
-        self.turn_time = time.time()
+        self.white_timer = Timer(time_limit, increment)
+        self.black_timer = Timer(time_limit, increment)
         self.history = []
 
     @property
@@ -41,10 +40,8 @@ class Game:
     
     @white_timer.setter
     def white_timer(self, value):
-        if not isinstance(value, float) and not isinstance(value, int):
-            raise TypeError("Time must be a number")
-        if value <= 0:
-            raise ValueError("Time must greater than 0")
+        if not isinstance(value, Timer):
+            raise TypeError("Timer must be a Timer")
         self._white_timer = value
     
     @property
@@ -53,23 +50,9 @@ class Game:
     
     @black_timer.setter
     def black_timer(self, value):
-        if not isinstance(value, float) and not isinstance(value, int):
-            raise TypeError("Time must be a number")
-        if value <= 0:
-            raise ValueError("Time must greater than 0")
+        if not isinstance(value, Timer):
+            raise TypeError("Timer must be a Timer")
         self._black_timer = value
-
-    @property
-    def turn_time(self):
-        return self._turn_time
-    
-    @turn_time.setter
-    def turn_time(self, value):
-        if not isinstance(value, float):
-            raise TypeError("Turn time must be float")
-        if value <= 0:
-            raise ValueError("Turn time must be positive")
-        self._turn_time = value
 
     @property
     def history(self):
@@ -91,40 +74,48 @@ class Game:
         for i in range(8):
             self.board.add_piece(Pawn("B"), (i, 1))
             self.board.add_piece(Pawn("W"), (i, 6))
+
         back_rank = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
+        
         for x, piece_class in enumerate(back_rank):
             self.board.add_piece(piece_class("B"), (x, 0))
             self.board.add_piece(piece_class("W"), (x, 7))
 
     def undo_move(self):
         last_move = self.history.pop()
-        piece = last_move["piece"]
-        target = last_move["target"]
-        start = last_move["start"]
-        end = last_move["end"]
+        piece = last_move.piece
+        target = last_move.target
+        start = last_move.start
+        end = last_move.end
         start_x, start_y = start
         end_x, end_y = end
+        has_moved = last_move.has_moved
+        en_passant_target = last_move.en_passant_target
+
         # undo castling
-        if isinstance(piece, King) and abs(start_x - end_x) == 2:
+        if isinstance(last_move.piece, King) and abs(start_x - end_x) == 2:
             dir_x = 1 if end_x > start_x else -1
             rook_x = 7 if end_x > start_x else 0
             self.board.remove_piece((start_x + dir_x, start_y))
             self.board.add_piece(Rook(piece.color), (rook_x, start_y))
+
         # undo move
         self.board.remove_piece(end)
         self.board.add_piece(piece, start)
-        self.white_timer = last_move["white_timer"]
-        self.black_timer = last_move["black_timer"]
+
         if isinstance(piece, Rook) or isinstance(piece, King):
-            piece.has_moved = last_move["has_moved"]
+            piece.has_moved = has_moved
+        
         if target is not None:
             self.board.add_piece(target, end)
+
         # en passant
-        elif (end[0], end[1]) == last_move["en_passant_target"]:
+        elif (end_x, end_y) == en_passant_target:
             value = 1 if piece.color == "W" else -1
             color = "B" if piece.color == "W" else "W"
             self.board.add_piece(Pawn(color), (end_x, end_y + value))
-        self.board.en_passant_target = last_move["en_passant_target"]
+
+        self.board.en_passant_target = en_passant_target
 
     def check(self):
         if self.turn == "W":
@@ -133,6 +124,7 @@ class Game:
         else:
             my_king_coords = self.board.black_king_coords
             other_coords = self.board.white_pieces_coords
+        
         for coords in other_coords:
             piece = self.board.get_piece_at(coords)
             piece_moves = piece.get_possible_moves(self.board, coords)
@@ -146,14 +138,18 @@ class Game:
             my_coords = list(self.board.white_pieces_coords)
         else:
             my_coords = list(self.board.black_pieces_coords)
+
         for start in my_coords:
             start_x, start_y = start
             piece = self.board.get_piece_at(start)
             piece_moves = piece.get_possible_moves(self.board, start)
+
             for end in piece_moves:
                 end_x, end_y = end
+
                 # simulate move
                 self.board.move(self, start, end)
+
                 if not self.check():
                     # castling comprobations
                     if isinstance(piece, King) and abs(start_x - end_x) == 2:
@@ -162,11 +158,15 @@ class Game:
                         dir_x = 1 if end_x > start_x else -1
                         self.board.move(self, start, (start_x + dir_x, start_y))
                         passed_trough_check = self.check()
+
                         if was_in_check or passed_trough_check:
                             self.undo_move()
                             continue
+
                     legal_moves.append((start, end))
+
                 self.undo_move()
+
         return legal_moves
     
     def pawn_promotion(self, coords):
@@ -176,6 +176,7 @@ class Game:
     def promotion_to(self, piece, coords):
         pawn = self.board.get_piece_at(coords)
         self.board.remove_piece(coords)
+
         if piece == "Q":
             self.board.add_piece(Queen(pawn.color), coords)
         elif piece == "R":
@@ -193,28 +194,28 @@ class Game:
 
     def play_move(self, start, end):
         legal_moves = self.get_all_legal_moves()
+
         # Checkmate and stalemate comprobations
         if len(legal_moves) == 0:
             check = self.check()
             if check:
                 return "CHECKMATE"
             return "STALEMATE"
+        
         if (start, end) not in legal_moves:
             return "INVALID"
+        
         self.board.move(self, start, end)
+
         # Timer
-        current_time = time.time()
-        time_spent = current_time - self.turn_time
-        if self.turn  == "W":
-            if self.white_timer - time_spent <= 0:
+        if self.white_timer.is_timeout() or self.black_timer.is_timeout():
                 return "TIMEOUT"
-            else:
-                self.white_timer -= time_spent
+        if self.turn == "W":
+            self.white_timer.stop()
+            self.black_timer.start()
         else:
-            if self.black_timer - time_spent <= 0:
-                return "TIMEOUT"
-            else:
-                self.black_timer -= time_spent
-        self.turn_time = time.time()
+            self.black_timer.stop()
+            self.white_timer.start()
+    
         return "SUCCESS"
         
