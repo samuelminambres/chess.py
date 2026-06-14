@@ -1,7 +1,7 @@
 from chessboard import Chessboard
 from pieces import *
 from utils import to_notation
-from timer import Timer
+from timers import Timer
 from move import Move
 
 class Game:
