@@ -2,7 +2,7 @@ from pieces import Piece
 
 class Move:
 
-    def __init__(self, start: tuple, end: tuple, piece: Piece, target = None, en_passant_target = None, has_moved: bool = False):
+    def __init__(self, start: tuple, end: tuple, piece: Piece, target, en_passant_target, has_moved: bool, half_move_clock: int):
         self.piece = piece
         self.target = target
         self.start = start
@@ -83,3 +83,15 @@ class Move:
         if not isinstance(value, bool) and value is not None:
             raise TypeError("Has moved must be bool")
         self._has_moved = value
+        
+    @property
+    def half_move_clock(self):
+        return self._half_move_clock
+    
+    @half_move_clock.setter
+    def half_move_clock(self, value):
+        if not isinstance(value, int):
+            raise TypeError("Counter value must be int")
+        if value < 0:
+            raise ValueError("Value must be 0 or greater")
+        self._half_move_clock = value

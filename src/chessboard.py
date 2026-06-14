@@ -1,5 +1,4 @@
 from pieces import *
-from move import Move
 
 class Chessboard:
 
@@ -143,20 +142,16 @@ class Chessboard:
         x, y = coords
         return self.grid[y][x]
     
-    def move(self, game, start, end):
+    def move(self, start, end):
         piece = self.get_piece_at(start)
-
         if piece is None:
             return False
         
         possible_moves = piece.get_possible_moves(self, start)
-
         if end not in possible_moves:
             return False
         
         target = self.get_piece_at(end)
-        game.history.append(Move(start, end, piece, target = target, en_passant_target = self.en_passant_target, has_moved = piece.has_moved))
-        
         if target is not None:
             self.remove_piece(end)
         

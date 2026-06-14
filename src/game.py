@@ -2,6 +2,7 @@ from chessboard import Chessboard
 from pieces import *
 from utils import to_notation
 from timer import Timer
+from move import Move
 
 class Game:
 
@@ -10,6 +11,7 @@ class Game:
         self.turn = "W"
         self.white_timer = Timer(time_limit, increment)
         self.black_timer = Timer(time_limit, increment)
+        self.half_move_clock = 0
         self.history = []
 
     @property
@@ -53,6 +55,18 @@ class Game:
         if not isinstance(value, Timer):
             raise TypeError("Timer must be a Timer")
         self._black_timer = value
+        
+    @property
+    def half_move_clock(self):
+        return self._half_move_clock
+    
+    @half_move_clock.setter
+    def half_move_clock(self, value):
+        if not isinstance(value, int):
+            raise TypeError("Counter value must be int")
+        if value < 0:
+            raise ValueError("Value must be 0 or greater")
+        self._half_move_clock = value
 
     @property
     def history(self):
@@ -131,6 +145,22 @@ class Game:
             if my_king_coords in piece_moves:
                 return True
         return False
+    
+    def is_insufficient_material(self):
+        if len(self.board.white_pieces_coords) == 1 and len(self.board.black_pieces_coords) == 1:
+            return True
+        elif len(self.board.white_pieces_coords) == 1 and len(self.board.black_pieces_coords) <= 2:
+            for coords in self.board.black_pieces_coords:
+                if not isinstance(self.board.get_piece_at(coords), King) and not isinstance(self.board.get_piece_at(coords), Bishop) and not isinstance(self.board.get_piece_at(coords), Knight):
+                    return False
+            return True
+        elif len(self.board.black_pieces_coords) == 1 and len(self.board.white_pieces_coords) <= 2:
+            for coords in self.board.white_pieces_coords:
+                if not isinstance(self.board.get_piece_at(coords), King) and not isinstance(self.board.get_piece_at(coords), Bishop) and not isinstance(self.board.get_piece_at(coords), Knight):
+                    return False
+            return True
+        return False
+            
 
     def get_all_legal_moves(self):
         legal_moves = []
@@ -148,7 +178,9 @@ class Game:
                 end_x, end_y = end
 
                 # simulate move
-                self.board.move(self, start, end)
+                target = self.board.get_piece_at(end)
+                self.board.move(start, end)
+                self.history.append(Move(start, end, piece, target, self.board.en_passant_target, piece.has_moved, self.half_move_clock))
 
                 if not self.check():
                     # castling comprobations
@@ -205,7 +237,24 @@ class Game:
         if (start, end) not in legal_moves:
             return "INVALID"
         
-        self.board.move(self, start, end)
+        piece = self.board.get_piece_at(start)
+        target = self.board.get_piece_at(end)
+        self.board.move(start, end)
+        
+        # 50 moves rule
+        if isinstance(piece, Pawn) or target is not None:
+            self.half_move_clock = 0
+        else:
+            self.half_move_clock += 1
+        
+        if self.half_move_clock == 50:
+            return "DRAW"
+            
+        self.history.append(Move(start, end, piece, target, self.board.en_passant_target, piece.has_moved, self.half_move_clock))
+        
+        # Insufficient material
+        if self.is_insufficient_material():
+            return "DRAW"
 
         # Timer
         if self.white_timer.is_timeout() or self.black_timer.is_timeout():

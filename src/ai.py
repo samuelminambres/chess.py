@@ -1,3 +1,5 @@
+from move import Move
+
 class ChessAI:
 
     def __init__(self, depth = 3, color = "B"):
@@ -34,7 +36,9 @@ class ChessAI:
             return None
         best_eval = float("-inf") if self.color == "W" else float("inf")
         for start, end in legal_moves:
-            move = game.board.move(game, start, end)
+            piece = game.board.get_piece_at(start)
+            target = game.board.get_piece_at(end)
+            move = game.board.move(start, end)
             if not move:
                 continue
             if game.pawn_promotion(end):
@@ -42,6 +46,7 @@ class ChessAI:
             game.swap_turn()
             is_maximizing = self.color == "B"
             eval = self.minimax(game, depth = self.depth - 1, is_maximizing = is_maximizing)
+            game.history.append(Move(start, end, piece, target, game.board.en_passant_target, piece.has_moved, game.half_move_clock))
             game.undo_move()
             game.swap_turn()
             best_eval = max(best_eval, eval) if self.color == "W" else min(best_eval, eval)
@@ -58,13 +63,16 @@ class ChessAI:
         if is_maximizing:
             max_eval = float("-inf")
             for start, end in legal_moves:
-                move = game.board.move(game, start, end)
+                piece = game.board.get_piece_at(start)
+                target = game.board.get_piece_at(end)
+                move = game.board.move(start, end)
                 if not move:
                     continue
                 if game.pawn_promotion(end):
                     game.promotion_to("Q", end)
                 game.swap_turn()
                 eval = self.minimax(game, depth = depth - 1, is_maximizing = False, alpha = alpha, beta = beta)
+                game.history.append(Move(start, end, piece, target, game.board.en_passant_target, piece.has_moved, game.half_move_clock))
                 game.undo_move()
                 game.swap_turn()
                 max_eval = max(max_eval, eval)
@@ -75,13 +83,16 @@ class ChessAI:
         else:
             min_eval = float("inf")
             for start, end in legal_moves:
-                move = game.board.move(game, start, end)
+                piece = game.board.get_piece_at(start)
+                target = game.board.get_piece_at(end)
+                move = game.board.move(start, end)
                 if not move:
                     continue
                 if game.pawn_promotion(end):
                     game.promotion_to("Q", end)
                 game.swap_turn()
                 eval = self.minimax(game, depth = depth - 1, is_maximizing = True, alpha = alpha, beta = beta)
+                game.history.append(Move(start, end, piece, target, game.board.en_passant_target, piece.has_moved, game.half_move_clock))
                 game.undo_move()
                 game.swap_turn()
                 min_eval = min(min_eval, eval)
