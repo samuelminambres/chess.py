@@ -1,5 +1,3 @@
-import time
-
 def to_coords(square):
     square = square.upper().strip()
     if len(square) != 2:
