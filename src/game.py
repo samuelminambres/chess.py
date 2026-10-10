@@ -5,8 +5,24 @@ from timers import Timer
 from move import Move
 
 class Game:
+    """Controls the overall chess game rules, turn cycles, timers, and move execution.
+
+    Attributes:
+        board (Chessboard): The active chessboard instance.
+        turn (str): Current player turn ('W' or 'B').
+        white_timer (Timer): Clock timer for the White player.
+        black_timer (Timer): Clock timer for the Black player.
+        half_move_clock (int): Half-move clock counter for the 50-move draw rule.
+        history (list[Move]): Chronological list of completed moves.
+    """
 
     def __init__(self, time_limit = 600.0, increment = 0.0):
+        """Initializes a new chess game.
+
+        Args:
+            time_limit (float, optional): Initial time per player in seconds. Defaults to 600.0.
+            increment (float, optional): Time increment per move in seconds. Defaults to 0.0.
+        """
         self.board = Chessboard()
         self.turn = "W"
         self.white_timer = Timer(time_limit, increment)
@@ -16,20 +32,47 @@ class Game:
 
     @property
     def board(self):
+        """Gets the chessboard instance.
+
+        Returns:
+            Chessboard: The game board.
+        """
         return self._board
     
     @board.setter
     def board(self, value):
+        """Sets the chessboard instance.
+
+        Args:
+            value (Chessboard): The game board.
+
+        Raises:
+            TypeError: If value is not a Chessboard instance.
+        """
         if not isinstance(value, Chessboard):
             raise TypeError("Board must be Chessboard")
         self._board = value
 
     @property
     def turn(self):
+        """Gets the current player's turn.
+
+        Returns:
+            str: 'W' for White or 'B' for Black.
+        """
         return self._turn
     
     @turn.setter
     def turn(self, value):
+        """Sets the current player's turn.
+
+        Args:
+            value (str): 'W' or 'B'.
+
+        Raises:
+            TypeError: If value is not a string.
+            ValueError: If value is not 'W' or 'B'.
+        """
         if not isinstance(value, str):
             raise TypeError("Turn must be str")
         if value != "W" and value != "B":
@@ -38,30 +81,70 @@ class Game:
 
     @property
     def white_timer(self):
+        """Gets the timer for the White player.
+
+        Returns:
+            Timer: White's timer.
+        """
         return self._white_timer
     
     @white_timer.setter
     def white_timer(self, value):
+        """Sets the timer for the White player.
+
+        Args:
+            value (Timer): White's timer.
+
+        Raises:
+            TypeError: If value is not a Timer instance.
+        """
         if not isinstance(value, Timer):
             raise TypeError("Timer must be a Timer")
         self._white_timer = value
     
     @property
     def black_timer(self):
+        """Gets the timer for the Black player.
+
+        Returns:
+            Timer: Black's timer.
+        """
         return self._black_timer
     
     @black_timer.setter
     def black_timer(self, value):
+        """Sets the timer for the Black player.
+
+        Args:
+            value (Timer): Black's timer.
+
+        Raises:
+            TypeError: If value is not a Timer instance.
+        """
         if not isinstance(value, Timer):
             raise TypeError("Timer must be a Timer")
         self._black_timer = value
         
     @property
     def half_move_clock(self):
+        """Gets the half-move clock counter for the 50-move rule.
+
+        Returns:
+            int: Number of half-moves since last pawn move or capture.
+        """
         return self._half_move_clock
     
     @half_move_clock.setter
     def half_move_clock(self, value):
+        """Sets the half-move clock counter for the 50-move rule.
+
+        Args:
+            value (int): Half-move counter value.
+
+        Raises:
+            TypeError: If value is not an int.
+            ValueError: If value is negative.
+        """
         if not isinstance(value, int):
             raise TypeError("Counter value must be int")
         if value < 0:
@@ -70,21 +153,40 @@ class Game:
 
     @property
     def history(self):
+        """Gets the list of played moves.
+
+        Returns:
+            list: Move history list.
+        """
         return self._history
     
     @history.setter
     def history(self, value):
+        """Sets the list of played moves.
+
+        Args:
+            value (list): Move history list.
+
+        Raises:
+            TypeError: If value is not a list.
+        """
         if not isinstance(value, list):
             raise TypeError("History must be list")
         self._history = value
 
     def __str__(self):
+        """Returns the formatted move history in algebraic notation.
+
+        Returns:
+            str: String of moves in format 'A1 -> A2\\n'.
+        """
         result = ""
         for move in self.history:
             result += f"{to_notation(move.start)} -> {to_notation(move.end)}\n"
         return result
 
     def setup_standard_board(self):
+        """Sets up the initial standard chess piece positions on the board."""
         for i in range(8):
             self.board.add_piece(Pawn("B"), (i, 1))
             self.board.add_piece(Pawn("W"), (i, 6))
@@ -96,6 +198,7 @@ class Game:
             self.board.add_piece(piece_class("W"), (x, 7))
 
     def undo_move(self):
+        """Reverts the last move made, restoring pieces and board state."""
         last_move = self.history.pop()
         piece = last_move.piece
         target = last_move.target
@@ -132,6 +235,11 @@ class Game:
         self.board.en_passant_target = en_passant_target
 
     def check(self):
+        """Checks whether the current player's king is currently in check.
+
+        Returns:
+            bool: True if the current player's king is attacked, False otherwise.
+        """
         if self.turn == "W":
             my_king_coords = self.board.white_king_coords
             other_coords = self.board.black_pieces_coords
@@ -147,6 +255,11 @@ class Game:
         return False
     
     def is_insufficient_material(self):
+        """Determines if the game is a draw due to insufficient material to checkmate.
+
+        Returns:
+            bool: True if insufficient material exists on the board, False otherwise.
+        """
         if len(self.board.white_pieces_coords) == 1 and len(self.board.black_pieces_coords) == 1:
             return True
         elif len(self.board.white_pieces_coords) == 1 and len(self.board.black_pieces_coords) <= 2:
@@ -163,6 +276,11 @@ class Game:
             
 
     def get_all_legal_moves(self):
+        """Generates all legal (start, end) coordinate moves for the current player.
+
+        Returns:
+            list[tuple[tuple[int, int], tuple[int, int]]]: List of tuples with start and end coordinates.
+        """
         legal_moves = []
         if self.turn == "W":
             my_coords = list(self.board.white_pieces_coords)
@@ -202,10 +320,24 @@ class Game:
         return legal_moves
     
     def pawn_promotion(self, coords):
+        """Checks if a pawn at coords has reached the opposite end of the board.
+
+        Args:
+            coords (tuple): The (x, y) coordinates of the square to check.
+
+        Returns:
+            bool: True if the piece at coords is a Pawn on row 0 or 7, False otherwise.
+        """
         x, y = coords
         return (y == 0 or y == 7) and isinstance(self.board.get_piece_at(coords), Pawn)
     
     def promotion_to(self, piece, coords):
+        """Replaces a pawn at the given coordinates with the promoted piece type.
+
+        Args:
+            piece (str): Target piece abbreviation ('Q', 'R', 'B', 'N').
+            coords (tuple): The (x, y) board coordinates of the promoting pawn.
+        """
         pawn = self.board.get_piece_at(coords)
         self.board.remove_piece(coords)
 
@@ -219,12 +351,23 @@ class Game:
             self.board.add_piece(Knight(pawn.color), coords)
 
     def swap_turn(self):
+        """Swaps the turn between White ('W') and Black ('B')."""
         if self.turn == "W":
             self.turn = "B"
         else:
             self.turn = "W"
 
     def play_move(self, start, end):
+        """Attempts to play a move from start to end coordinates and updates game state.
+
+        Args:
+            start (tuple): The starting (x, y) coordinates.
+            end (tuple): The destination (x, y) coordinates.
+
+        Returns:
+            str: Move status outcome ('SUCCESS', 'INVALID', 'CHECKMATE', 'STALEMATE',
+                'DRAW', or 'TIMEOUT').
+        """
         legal_moves = self.get_all_legal_moves()
 
         # Checkmate and stalemate comprobations

@@ -16,7 +16,28 @@ PIECE_NAMES = (
 PROMOTION_PIECES = ("Queen", "Rook", "Bishop", "Knight")
 
 class Gui:
+    """Manages graphical rendering, Pygame windows, menus, and user interactions.
+
+    Attributes:
+        height (int): Window height in pixels.
+        width (int): Window width in pixels.
+        board_size (int): Pixel size of the square chessboard area.
+        square_size (int): Pixel dimension of each chessboard square.
+        panel_x (int): Horizontal starting offset for the sidebar panel.
+        panel_width (int): Width of the sidebar panel in pixels.
+        display (pygame.Surface): Main Pygame display surface.
+        images (dict): Loaded and scaled piece texture images.
+        scroll_y (int): Vertical scroll offset for move history.
+        line_h (int): Height of each line of move history text.
+    """
+
     def __init__(self, height: int = 800, width: int = 1200):
+        """Initializes the graphical user interface and Pygame window.
+
+        Args:
+            height (int, optional): Window height in pixels. Defaults to 800.
+            width (int, optional): Window width in pixels. Defaults to 1200.
+        """
         pygame.init()
         self.height = height
         self.width = width
@@ -43,6 +64,7 @@ class Gui:
         self._init_layout()
 
     def _init_layout(self):
+        """Initializes layout coordinates and bounding rectangles for UI elements."""
         btn_margin = 25
         btn_y = self.height - 75
         btn_h = 50
@@ -75,6 +97,14 @@ class Gui:
         self.col_black_local_x = self.col_black_x - self.history_rect.x
 
     def _get_font(self, size: int) -> pygame.font.Font:
+        """Retrieves a cached Font instance for the given point size.
+
+        Args:
+            size (int): Font size in points.
+
+        Returns:
+            pygame.font.Font: Loaded or cached font instance.
+        """
         if size not in self._font_cache:
             if os.path.exists(self.font_path):
                 self._font_cache[size] = pygame.font.Font(self.font_path, size)
@@ -83,6 +113,19 @@ class Gui:
         return self._font_cache[size]
 
     def _render_text(self, text: str, size: int, color, center=None, topleft=None, surface=None):
+        """Renders text onto a target surface or the main display.
+
+        Args:
+            text (str): The text string to render.
+            size (int): Font size in points.
+            color (tuple): RGB color tuple for the font.
+            center (tuple, optional): Center position (x, y). Defaults to None.
+            topleft (tuple, optional): Top-left position (x, y). Defaults to None.
+            surface (pygame.Surface, optional): Surface to render onto. Defaults to None.
+
+        Returns:
+            pygame.Rect: Bounding rectangle of the drawn text.
+        """
         target = surface or self.display
         font = self._get_font(size)
         text_surf = font.render(text, True, color)
@@ -98,6 +141,7 @@ class Gui:
         return text_rect
 
     def load_images(self):
+        """Loads and scales piece image assets from the assets directory."""
         images_route = os.path.join(os.path.dirname(__file__), "..", "assets", "images")
         for piece in PIECE_NAMES:
             png_route = os.path.join(images_route, f"{piece}.png")
@@ -108,6 +152,7 @@ class Gui:
                 )
 
     def draw_board(self):
+        """Draws the alternating light and dark squares of the chessboard."""
         for y in range(BOARD_DIMENSION):
             for x in range(BOARD_DIMENSION):
                 color = COLOR_LIGHT if (x + y) % 2 == 0 else COLOR_DARK
@@ -115,6 +160,11 @@ class Gui:
                 pygame.draw.rect(self.display, color, square)
 
     def draw_pieces(self, board):
+        """Draws all active chess pieces on their corresponding squares.
+
+        Args:
+            board (Chessboard): The chessboard containing the pieces to draw.
+        """
         for y in range(BOARD_DIMENSION):
             for x in range(BOARD_DIMENSION):
                 piece = board.get_piece_at((x, y))
@@ -127,6 +177,11 @@ class Gui:
                     self.display.blit(self.images[texture], (x_pixel, y_pixel))
 
     def draw_information(self, game):
+        """Renders the sidebar panel including the timer, move history, and buttons.
+
+        Args:
+            game (Game): The current game instance.
+        """
         pygame.draw.rect(
             self.display,
             COLOR_SIDEBAR,
@@ -175,6 +230,14 @@ class Gui:
         self._render_text("RESTART", 20, COLOR_LIGHT, center=self.restart_btn_rect.center)
 
     def timer(self, game):
+        """Renders the active turn player and countdown timer on the sidebar.
+
+        Args:
+            game (Game): The current game instance.
+
+        Returns:
+            bool: False if the active player's timer has expired, True otherwise.
+        """
         turn = "Whites' " if game.turn == "W" else "Blacks' "
         timer = game.white_timer if game.turn == "W" else game.black_timer
         if timer.is_timeout():
@@ -186,10 +249,26 @@ class Gui:
         return True
 
     def _get_content_height(self, game) -> int:
+        """Calculates the total height of move history content in pixels.
+
+        Args:
+            game (Game): The current game instance.
+
+        Returns:
+            int: The total calculated height in pixels.
+        """
         total_rows = ceil(len(game.history) / 2) if hasattr(game, "history") else ceil(len(str(game).split("\n")) / 2)
         return max(1, total_rows * self.line_h)
 
     def scroll_limits(self, game):
+        """Restricts vertical scroll position within view boundaries.
+
+        Args:
+            game (Game): The current game instance.
+
+        Returns:
+            int: Maximum allowed scroll offset (negative or zero).
+        """
         visible_h = self.history_rect.height
         total_h = self._get_content_height(game)
 
@@ -202,6 +281,11 @@ class Gui:
         return 0
 
     def scrollbar(self, game):
+        """Renders the scrollbar track and thumb for the move history view.
+
+        Args:
+            game (Game): The current game instance.
+        """
         self.scroll_limits(game)
         visible_h = self.history_rect.height
         total_h = self._get_content_height(game)
@@ -225,9 +309,24 @@ class Gui:
         pygame.draw.rect(self.display, COLOR_LIGHT, thumb_rect)
 
     def translate_coords(self, x_mouse, y_mouse):
+        """Translates pixel mouse coordinates to board square grid coordinates.
+
+        Args:
+            x_mouse (int): Mouse x coordinate in pixels.
+            y_mouse (int): Mouse y coordinate in pixels.
+
+        Returns:
+            tuple[int, int]: The (col, row) coordinates on the chessboard grid.
+        """
         return x_mouse // self.square_size, y_mouse // self.square_size
 
     def show_result(self, game, result):
+        """Displays an overlay with the final match outcome dialog.
+
+        Args:
+            game (Game): The current game instance.
+            result (str): Game termination status ('CHECKMATE', 'TIMEOUT', etc.).
+        """
         overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         overlay.fill(COLOR_OVERLAY)
         self.display.blit(overlay, (0, 0))
@@ -252,6 +351,11 @@ class Gui:
         pygame.display.flip()
 
     def pawn_promotion_menu(self, game):
+        """Renders the pawn promotion dialog overlay with selectable pieces.
+
+        Args:
+            game (Game): The current game instance.
+        """
         overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         overlay.fill(COLOR_OVERLAY)
         self.display.blit(overlay, (0, 0))
@@ -276,6 +380,7 @@ class Gui:
                 self.display.blit(self.images[texture], img_rect)
 
     def menu(self):
+        """Renders the game start menu for selecting the game mode."""
         bg_surface = pygame.Surface((self.width, self.height))
         bg_surface.fill(COLOR_DARK)
         self.display.blit(bg_surface, (0, 0))
@@ -307,9 +412,23 @@ class Gui:
         self._render_text("1vs1", 48, COLOR_DARK, center=card_1v1.center)
         
     def handle_scroll(self, y_offset: int, sens: int = 5):
+        """Scrolls the move history view vertically.
+
+        Args:
+            y_offset (int): Mouse wheel scroll delta.
+            sens (int, optional): Scroll sensitivity multiplier. Defaults to 5.
+        """
         self.scroll_y += y_offset * sens
 
     def get_menu_selection(self, pos: tuple[int, int]) -> str | None:
+        """Determines which game mode card was clicked in the start menu.
+
+        Args:
+            pos (tuple[int, int]): Screen coordinates (x, y) of the click.
+
+        Returns:
+            str or None: 'ai' for AI mode, '1vs1' for 2-player mode, or None.
+        """
         # Se calculan las mismas cajas definidas en menu()
         dialog_x = (self.width - 600) // 2
         dialog_y = (self.height - 400) // 2
@@ -326,6 +445,14 @@ class Gui:
         return None
 
     def get_promotion_selection(self, pos: tuple[int, int]) -> str | None:
+        """Determines which piece was selected from the promotion menu.
+
+        Args:
+            pos (tuple[int, int]): Screen coordinates (x, y) of the click.
+
+        Returns:
+            str or None: Piece abbreviation ('Q', 'R', 'B', 'N') or None if not clicked.
+        """
         dialog_w, dialog_h = 650, 200
         dialog_rect = pygame.Rect(0, 0, dialog_w, dialog_h)
         dialog_rect.center = (self.width // 2, self.height // 2)
@@ -343,6 +470,14 @@ class Gui:
         return None
 
     def get_sidebar_button(self, pos: tuple[int, int]) -> str | None:
+        """Checks if a sidebar action button was clicked.
+
+        Args:
+            pos (tuple[int, int]): Screen coordinates (x, y) of the click.
+
+        Returns:
+            str or None: 'undo' or 'restart' if a button was clicked, None otherwise.
+        """
         if self.undo_btn_rect.collidepoint(pos):
             return "undo"
         if self.restart_btn_rect.collidepoint(pos):
@@ -350,10 +485,29 @@ class Gui:
         return None
 
     def is_in_board(self, pos: tuple[int, int]) -> bool:
+        """Checks whether the given position lies inside the chessboard area.
+
+        Args:
+            pos (tuple[int, int]): Screen coordinates (x, y) of the position.
+
+        Returns:
+            bool: True if position is within chessboard bounds, False otherwise.
+        """
         x, y = pos
         return 0 <= x < self.panel_x and 0 <= y < self.height
 
     def update_display(self, game, selected_square, promotion, menu):
+        """Redraws the interface elements and flips the display buffer.
+
+        Args:
+            game (Game): The current game instance.
+            selected_square (tuple or None): The currently selected square (x, y) or None.
+            promotion (bool): True if the promotion dialog is active.
+            menu (bool): True if the main menu is active.
+
+        Returns:
+            None
+        """
         if menu:
             self.menu()
             pygame.display.flip()

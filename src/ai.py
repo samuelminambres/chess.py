@@ -1,17 +1,43 @@
 from move import Move
 
 class ChessAI:
+    """Chess engine opponent implementing minimax with alpha-beta pruning.
+
+    Attributes:
+        depth (int): Search depth limit for minimax evaluation.
+        color (str): The piece color played by the AI ('W' or 'B').
+    """
 
     def __init__(self, depth = 3, color = "B"):
+        """Initializes the ChessAI engine.
+
+        Args:
+            depth (int, optional): Search depth for the minimax algorithm (0-5). Defaults to 3.
+            color (str, optional): The color played by the AI ('W' or 'B'). Defaults to "B".
+        """
         self.depth = depth
         self.color = color
 
     @property
     def depth(self):
+        """Gets the search depth for minimax.
+
+        Returns:
+            int: The search depth.
+        """
         return self._depth
     
     @depth.setter
     def depth(self, value):
+        """Sets the search depth for minimax.
+
+        Args:
+            value (int): Search depth between 0 and 5.
+
+        Raises:
+            TypeError: If value is not an int.
+            ValueError: If value is not between 0 and 5.
+        """
         if not isinstance(value, int):
             raise TypeError("Depth must be int")
         if value < 0 or value > 5:
@@ -20,10 +46,24 @@ class ChessAI:
 
     @property
     def color(self):
+        """Gets the color played by the AI.
+
+        Returns:
+            str: Color string ('W' or 'B').
+        """
         return self._color
     
     @color.setter
     def color(self, value):
+        """Sets the color played by the AI.
+
+        Args:
+            value (str): Color string ('W' or 'B').
+
+        Raises:
+            TypeError: If value is not a str.
+            ValueError: If value is not 'W' or 'B'.
+        """
         if not isinstance(value, str):
             raise TypeError("Color must be str")
         if value != "W" and value != "B":
@@ -31,6 +71,15 @@ class ChessAI:
         self._color = value
 
     def get_best_move(self, game):
+        """Finds the best move for the AI using minimax with alpha-beta pruning.
+
+        Args:
+            game (Game): The current chess game instance.
+
+        Returns:
+            tuple or None: A tuple of (start, end) coordinates representing the best move,
+                or None if no legal moves exist.
+        """
         legal_moves = game.get_all_legal_moves()
         if not legal_moves:
             return None
@@ -55,6 +104,18 @@ class ChessAI:
         return best_move
 
     def minimax(self, game, depth, is_maximizing, alpha = float("-inf"), beta = float("inf")):
+        """Evaluates game positions recursively using minimax with alpha-beta pruning.
+
+        Args:
+            game (Game): The current chess game instance.
+            depth (int): Remaining depth to search.
+            is_maximizing (bool): True if evaluating for the maximizing player, False otherwise.
+            alpha (float, optional): Best score that the maximizer can guarantee. Defaults to -inf.
+            beta (float, optional): Best score that the minimizer can guarantee. Defaults to inf.
+
+        Returns:
+            float: Evaluated positional score.
+        """
         if depth == 0:
             return self.evaluate(game.board)
         legal_moves = game.get_all_legal_moves()
@@ -102,6 +163,14 @@ class ChessAI:
             return min_eval
 
     def evaluate(self, board):
+        """Computes a static heuristic evaluation of the board state.
+
+        Args:
+            board (Chessboard): The chessboard instance to evaluate.
+
+        Returns:
+            float: The heuristic score where positive favors White and negative favors Black.
+        """
         evaluation = 0
         for x, y in board.white_pieces_coords:
             piece = board.get_piece_at((x, y))
