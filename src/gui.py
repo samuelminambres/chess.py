@@ -1,189 +1,329 @@
-import pygame
 import os
 from math import ceil
+import pygame
+
+BOARD_DIMENSION = 8
+COLOR_LIGHT = (240, 217, 181)
+COLOR_DARK = (181, 136, 99)
+COLOR_SIDEBAR = (139, 90, 43)
+COLOR_SCROLL_TRACK = (112, 72, 34)
+COLOR_OVERLAY = (0, 0, 0, 80)
+COLOR_HIGHLIGHT = (100, 200, 255, 90)
+PIECE_NAMES = (
+    "WPawn", "WRook", "WKnight", "WBishop", "WQueen", "WKing",
+    "BPawn", "BRook", "BKnight", "BBishop", "BQueen", "BKing"
+)
+PROMOTION_PIECES = ("Queen", "Rook", "Bishop", "Knight")
 
 class Gui:
-
-    def __init__(self):
+    def __init__(self, height: int = 800, width: int = 1200):
         pygame.init()
-        self.height = 800
-        self.width = 1200
-        self.square_size = self.height // 8
+        self.height = height
+        self.width = width
+        
+        self.board_size = self.height
+        self.square_size = self.board_size // BOARD_DIMENSION
+        self.panel_x = self.square_size * BOARD_DIMENSION
+        self.panel_width = self.width - self.panel_x
+
         self.display = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption("Python chess engine")
+
+        self.font_path = os.path.join(
+            os.path.dirname(__file__), "..", "assets", "fonts", "PressStart2P.ttf"
+        )
+        self._font_cache = {}
+
         self.images = {}
         self.load_images()
-        self.font = os.path.join(os.path.dirname(__file__), "..", "assets", "fonts", "PressStart2P.ttf")
+
         self.scroll_y = 0
-        self.light_color = (240, 217, 181)
-        self.dark_color = (181, 136, 99)
+        self.line_h = 24
+
+        self._init_layout()
+
+    def _init_layout(self):
+        btn_margin = 25
+        btn_y = self.height - 75
+        btn_h = 50
+        btn_w = 150
+
+        self.undo_btn_rect = pygame.Rect(
+            self.panel_x + btn_margin, btn_y, btn_w, btn_h
+        )
+        self.restart_btn_rect = pygame.Rect(
+            self.panel_x + self.panel_width - btn_margin - btn_w, btn_y, btn_w, btn_h
+        )
+
+        self.bar_w = 10
+        self.bar_x = self.restart_btn_rect.right - self.bar_w
+
+        history_x = self.undo_btn_rect.left
+        history_gap_bar = 10
+        history_width = (self.bar_x - history_gap_bar) - history_x
+        
+        self.history_rect = pygame.Rect(history_x, 257, history_width, 435)
+
+        self.scroll_track_rect = pygame.Rect(
+            self.bar_x, self.history_rect.y, self.bar_w, self.history_rect.height
+        )
+
+        self.col_white_x = history_x + 20 + 70
+        self.col_black_x = history_x + 180 + 70
+
+        self.col_white_local_x = self.col_white_x - self.history_rect.x
+        self.col_black_local_x = self.col_black_x - self.history_rect.x
+
+    def _get_font(self, size: int) -> pygame.font.Font:
+        if size not in self._font_cache:
+            if os.path.exists(self.font_path):
+                self._font_cache[size] = pygame.font.Font(self.font_path, size)
+            else:
+                self._font_cache[size] = pygame.font.SysFont("sans-serif", size)
+        return self._font_cache[size]
+
+    def _render_text(self, text: str, size: int, color, center=None, topleft=None, surface=None):
+        target = surface or self.display
+        font = self._get_font(size)
+        text_surf = font.render(text, True, color)
+        
+        if center:
+            text_rect = text_surf.get_rect(center=center)
+        elif topleft:
+            text_rect = text_surf.get_rect(topleft=topleft)
+        else:
+            text_rect = text_surf.get_rect()
+            
+        target.blit(text_surf, text_rect)
+        return text_rect
 
     def load_images(self):
-        current_directory = os.path.dirname(__file__)
-        images_route = os.path.join(current_directory, "..", "assets", "images")
-        pieces = ["WPawn", "WRook", "WKnight", "WBishop", "WQueen", "WKing", "BPawn", "BRook", "BKnight", "BBishop", "BQueen", "BKing"]
-        for piece in pieces:
+        images_route = os.path.join(os.path.dirname(__file__), "..", "assets", "images")
+        for piece in PIECE_NAMES:
             png_route = os.path.join(images_route, f"{piece}.png")
-            image = pygame.image.load(png_route)
-            self.images[piece] = pygame.transform.scale(image, (self.square_size, self.square_size))
+            if os.path.exists(png_route):
+                image = pygame.image.load(png_route)
+                self.images[piece] = pygame.transform.scale(
+                    image, (self.square_size, self.square_size)
+                )
 
     def draw_board(self):
-        for y in range(8):
-            for x in range(8):
-                color = self.light_color if (x + y) % 2 == 0 else self.dark_color
+        for y in range(BOARD_DIMENSION):
+            for x in range(BOARD_DIMENSION):
+                color = COLOR_LIGHT if (x + y) % 2 == 0 else COLOR_DARK
                 square = (x * self.square_size, y * self.square_size, self.square_size, self.square_size)
                 pygame.draw.rect(self.display, color, square)
 
     def draw_pieces(self, board):
-        for y in range(8):
-            for x in range(8):
+        for y in range(BOARD_DIMENSION):
+            for x in range(BOARD_DIMENSION):
                 piece = board.get_piece_at((x, y))
                 if piece is None:
                     continue
-                texture = piece.color + type(piece).__name__
-                x_pixel = x * self.square_size
-                y_pixel = y * self.square_size
-                self.display.blit(self.images[texture], (x_pixel, y_pixel))
+                texture = f"{piece.color}{type(piece).__name__}"
+                if texture in self.images:
+                    x_pixel = x * self.square_size
+                    y_pixel = y * self.square_size
+                    self.display.blit(self.images[texture], (x_pixel, y_pixel))
 
     def draw_information(self, game):
-        # background
-        pygame.draw.rect(self.display, (139, 90, 43), (self.square_size * 8, 0, self.width - self.square_size * 8, self.height))
-        # timers
+        pygame.draw.rect(
+            self.display,
+            COLOR_SIDEBAR,
+            (self.panel_x, 0, self.panel_width, self.height)
+        )
+
         self.timer(game)
-        # game history
-        game_history = pygame.font.Font(self.font, 28).render("Game history:", True, self.light_color)
-        self.display.blit(game_history, (825, 165))
-        whites = pygame.font.Font(self.font, 22).render("Whites", True, self.light_color)
-        self.display.blit(whites, (850, 215))
-        blacks = pygame.font.Font(self.font, 22).render("Blacks", True, self.light_color)
-        self.display.blit(blacks, (1025, 215))
-        # scrollable history
-        history_space = pygame.Surface((self.width - self.square_size * 8, 435), pygame.SRCALPHA)
-        history_space.fill((0,0,0,0))
-        history = str(game).split("\n")
+
+        panel_center_x = self.panel_x + (self.panel_width // 2)
+        self._render_text("Game history:", 28, COLOR_LIGHT, center=(panel_center_x, 165))
+        
+        self._render_text("Whites", 22, COLOR_LIGHT, center=(self.col_white_x, 215))
+        self._render_text("Blacks", 22, COLOR_LIGHT, center=(self.col_black_x, 215))
+
+        history_surface = pygame.Surface(self.history_rect.size, pygame.SRCALPHA)
+        history_surface.fill((0, 0, 0, 0))
+
         self.scrollbar(game)
+
+        history = str(game).split("\n")
         for i, line in enumerate(history):
-            render_line = pygame.font.Font(self.font, 15).render(line, True, self.light_color)
-            # Whites
+            if not line.strip():
+                continue
+            y_offset = (i // 2) * self.line_h + self.scroll_y
+            center_y = y_offset + (self.line_h // 2)
+
             if i % 2 == 0:
-                history_space.blit(render_line, (55, i*15 + self.scroll_y))
-            # Blacks
+                self._render_text(
+                    line, 15, COLOR_LIGHT,
+                    center=(self.col_white_local_x, center_y),
+                    surface=history_surface
+                )
             else:
-                history_space.blit(render_line, (230, (i-1)*15 + self.scroll_y))
-        self.display.blit(history_space, (800, 257))
-        # undo button
-        pygame.draw.rect(self.display, self.dark_color, (825, 725, 150, 50))
-        undo = pygame.font.Font(self.font, 20).render("UNDO", True, self.light_color)
-        self.display.blit(undo, (860, 741))
-        # restart button
-        pygame.draw.rect(self.display, self.dark_color, (1025, 725, 150, 50))
-        restart = pygame.font.Font(self.font, 20).render("RESTART", True, self.light_color)
-        self.display.blit(restart, (1031, 741))
+                self._render_text(
+                    line, 15, COLOR_LIGHT,
+                    center=(self.col_black_local_x, center_y),
+                    surface=history_surface
+                )
+
+        self.display.blit(history_surface, self.history_rect.topleft)
+
+        pygame.draw.rect(self.display, COLOR_DARK, self.undo_btn_rect)
+        self._render_text("UNDO", 20, COLOR_LIGHT, center=self.undo_btn_rect.center)
+
+        pygame.draw.rect(self.display, COLOR_DARK, self.restart_btn_rect)
+        self._render_text("RESTART", 20, COLOR_LIGHT, center=self.restart_btn_rect.center)
 
     def timer(self, game):
-        turn = "Whites'" if game.turn == "W" else "Blacks'"
+        turn = "Whites' " if game.turn == "W" else "Blacks' "
         timer = game.white_timer if game.turn == "W" else game.black_timer
         if timer.is_timeout():
             return False
-        turn_line = pygame.font.Font(self.font, 32).render(f"{turn}turn", True, self.light_color)
-        timer_shown = pygame.font.Font(self.font, 28).render(str(timer), True, self.light_color)
-        self.display.blit(turn_line, (825, 50))
-        self.display.blit(timer_shown, (930, 100))
+
+        center_x = self.panel_x + (self.panel_width // 2)
+        self._render_text(f"{turn}turn", 30, COLOR_LIGHT, center=(center_x, 60))
+        self._render_text(str(timer), 28, COLOR_LIGHT, center=(center_x, 110))
         return True
-    
+
+    def _get_content_height(self, game) -> int:
+        total_rows = ceil(len(game.history) / 2) if hasattr(game, "history") else ceil(len(str(game).split("\n")) / 2)
+        return max(1, total_rows * self.line_h)
+
     def scroll_limits(self, game):
-        history_pixel_length = ceil(len(game.history)/2)*30 - 15
-        if history_pixel_length > 435:
-            if self.scroll_y > 0:
-                self.scroll_y = 0
-            if self.scroll_y < 435 - history_pixel_length:
-                self.scroll_y = 435 - history_pixel_length
-            return 435 - history_pixel_length
+        visible_h = self.history_rect.height
+        total_h = self._get_content_height(game)
+
+        if total_h > visible_h:
+            max_scroll = visible_h - total_h
+            self.scroll_y = min(0, max(self.scroll_y, max_scroll))
+            return max_scroll
+            
         self.scroll_y = 0
-        return False
-    
+        return 0
+
     def scrollbar(self, game):
-        scroll_difference = self.scroll_limits(game)
-        if not scroll_difference:
-            return None
-        if scroll_difference > -435:
-            bar = pygame.Surface((10, 435 + scroll_difference))
-        else:
-            bar = pygame.Surface((10, 5))
-        bar.fill(self.light_color)
-        self.display.blit(bar, (1170, 257 - self.scroll_y))
+        self.scroll_limits(game)
+        visible_h = self.history_rect.height
+        total_h = self._get_content_height(game)
+
+        if total_h <= visible_h:
+            return
+
+        pygame.draw.rect(self.display, COLOR_SCROLL_TRACK, self.scroll_track_rect)
+
+        min_thumb_h = 24
+        thumb_h = int((visible_h / total_h) * visible_h)
+        thumb_h = max(min_thumb_h, min(thumb_h, visible_h))
+
+        scroll_range = total_h - visible_h
+        scroll_pct = (-self.scroll_y) / scroll_range if scroll_range > 0 else 0.0
+
+        available_track_travel = visible_h - thumb_h
+        thumb_y = self.scroll_track_rect.y + int(scroll_pct * available_track_travel)
+
+        thumb_rect = pygame.Rect(self.bar_x, thumb_y, self.bar_w, thumb_h)
+        pygame.draw.rect(self.display, COLOR_LIGHT, thumb_rect)
 
     def translate_coords(self, x_mouse, y_mouse):
         return x_mouse // self.square_size, y_mouse // self.square_size
-    
+
     def show_result(self, game, result):
-        background = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        background.fill((0, 0, 0, 80))
-        self.display.blit(background, (0, 0))
-        pygame.draw.rect(self.display, self.dark_color, (200, 200, 800, 400))
-        if result == "CHECKMATE" or "TIMEOUT":
-            if result == "CHECKMATE":
-                line_1 = pygame.font.Font(self.font, 80).render("CHECKMATE!", True, self.light_color)
-            else:
-                line_1 = pygame.font.Font(self.font, 100).render("TIMEOUT!", True, self.light_color)
+        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        overlay.fill(COLOR_OVERLAY)
+        self.display.blit(overlay, (0, 0))
+
+        dialog_w, dialog_h = int(self.width * 0.65), int(self.height * 0.5)
+        dialog_rect = pygame.Rect(0, 0, dialog_w, dialog_h)
+        dialog_rect.center = (self.width // 2, self.height // 2)
+
+        pygame.draw.rect(self.display, COLOR_DARK, dialog_rect)
+
+        if result in ("CHECKMATE", "TIMEOUT"):
+            title = "CHECKMATE!" if result == "CHECKMATE" else "TIMEOUT!"
             winner = "Blacks" if game.turn == "W" else "Whites"
-            line_2 = pygame.font.Font(self.font, 60).render(f"{winner} win", True, self.light_color)
-            self.display.blit(line_2, (310, 425))
-        elif result == "STALEMATE":
-            line_1 = pygame.font.Font(self.font, 80).render("STALEMATE!", True, self.light_color)
-            line_2 = pygame.font.Font(self.font, 60).render("Tie", True, self.light_color)
-            self.display.blit(line_2, (505, 425))
-        self.display.blit(line_1, (215, 325))
+            subtitle = f"{winner} win"
+        else:
+            title = "STALEMATE!"
+            subtitle = "Tie"
+
+        self._render_text(title, 70, COLOR_LIGHT, center=(dialog_rect.centerx, dialog_rect.centery - 50))
+        self._render_text(subtitle, 50, COLOR_LIGHT, center=(dialog_rect.centerx, dialog_rect.centery + 50))
+
         pygame.display.flip()
 
     def pawn_promotion_menu(self, game):
-        background = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        background.fill((0, 0, 0, 80))
-        self.display.blit(background, (0, 0))
-        pygame.draw.rect(self.display, self.dark_color, (275, 300, 650, 200))
-        pygame.draw.rect(self.display, self.light_color, (315, 340, 120, 120))
-        pygame.draw.rect(self.display, self.light_color, (465, 340, 120, 120))
-        pygame.draw.rect(self.display, self.light_color, (615, 340, 120, 120))
-        pygame.draw.rect(self.display, self.light_color, (765, 340, 120, 120))
-        self.display.blit(self.images[f"{game.turn}Queen"], (325, 350))
-        self.display.blit(self.images[f"{game.turn}Rook"], (475, 350))
-        self.display.blit(self.images[f"{game.turn}Bishop"], (625, 350))
-        self.display.blit(self.images[f"{game.turn}Knight"], (775, 350))
+        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        overlay.fill(COLOR_OVERLAY)
+        self.display.blit(overlay, (0, 0))
+
+        dialog_w, dialog_h = 650, 200
+        dialog_rect = pygame.Rect(0, 0, dialog_w, dialog_h)
+        dialog_rect.center = (self.width // 2, self.height // 2)
+        pygame.draw.rect(self.display, COLOR_DARK, dialog_rect)
+
+        card_size = 120
+        gap = (dialog_w - (card_size * 4)) // 5
+        card_y = dialog_rect.y + (dialog_h - card_size) // 2
+
+        for i, piece_name in enumerate(PROMOTION_PIECES):
+            card_x = dialog_rect.x + gap + i * (card_size + gap)
+            card_rect = pygame.Rect(card_x, card_y, card_size, card_size)
+            pygame.draw.rect(self.display, COLOR_LIGHT, card_rect)
+
+            texture = f"{game.turn}{piece_name}"
+            if texture in self.images:
+                img_rect = self.images[texture].get_rect(center=card_rect.center)
+                self.display.blit(self.images[texture], img_rect)
 
     def menu(self):
-        background_color = pygame.Surface((self.width, self.height))
-        background_color.fill(self.dark_color)
-        background = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        background.fill((0, 0, 0, 80))
-        self.display.blit(background_color, (0, 0))
-        self.display.blit(background, (0, 0))
-        pygame.draw.rect(self.display, self.dark_color, (300, 200, 600, 400))
-        pygame.draw.rect(self.display, self.light_color, (320, 310, 270, 270))
-        pygame.draw.rect(self.display, self.light_color, (610, 310, 270, 270))
-        text = pygame.font.Font(self.font, 30).render("Select game mode:", True, self.light_color)
-        self.display.blit(text, (345, 245))
-        ai = pygame.font.Font(self.font, 50).render("vs AI", True, self.dark_color)
-        self.display.blit(ai, (330, 415))
-        vs = pygame.font.Font(self.font, 63).render("1vs1", True, self.dark_color)
-        self.display.blit(vs, (620, 410))
-    
+        bg_surface = pygame.Surface((self.width, self.height))
+        bg_surface.fill(COLOR_DARK)
+        self.display.blit(bg_surface, (0, 0))
+
+        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        overlay.fill(COLOR_OVERLAY)
+        self.display.blit(overlay, (0, 0))
+
+        dialog_w, dialog_h = 600, 400
+        dialog_rect = pygame.Rect(0, 0, dialog_w, dialog_h)
+        dialog_rect.center = (self.width // 2, self.height // 2)
+        pygame.draw.rect(self.display, COLOR_DARK, dialog_rect)
+
+        self._render_text(
+            "Select game mode:", 28, COLOR_LIGHT, 
+            center=(dialog_rect.centerx, dialog_rect.y + 50)
+        )
+
+        card_w, card_h = 240, 240
+        card_y = dialog_rect.y + 110
+        gap = (dialog_w - (card_w * 2)) // 3
+
+        card_ai = pygame.Rect(dialog_rect.x + gap, card_y, card_w, card_h)
+        pygame.draw.rect(self.display, COLOR_LIGHT, card_ai)
+        self._render_text("vs AI", 42, COLOR_DARK, center=card_ai.center)
+
+        card_1v1 = pygame.Rect(card_ai.right + gap, card_y, card_w, card_h)
+        pygame.draw.rect(self.display, COLOR_LIGHT, card_1v1)
+        self._render_text("1vs1", 48, COLOR_DARK, center=card_1v1.center)
+
     def update_display(self, game, selected_square, promotion, menu):
         if menu:
             self.menu()
             pygame.display.flip()
             return None
+
         self.draw_board()
         self.draw_information(game)
-        # highlight selected square
-        if selected_square is not None and selected_square[0] <= 7:
+
+        if selected_square is not None and selected_square[0] < BOARD_DIMENSION:
             x, y = selected_square
-            highlighted_surface = pygame.Surface((self.square_size, self.square_size), pygame.SRCALPHA)
-            color = (100, 200, 255, 90)
-            highlighted_surface.fill(color)
-            x_pixel = x * self.square_size
-            y_pixel = y * self.square_size
-            self.display.blit(highlighted_surface, (x_pixel, y_pixel))
+            highlight = pygame.Surface((self.square_size, self.square_size), pygame.SRCALPHA)
+            highlight.fill(COLOR_HIGHLIGHT)
+            self.display.blit(highlight, (x * self.square_size, y * self.square_size))
+
         self.draw_pieces(game.board)
+
         if promotion:
             self.pawn_promotion_menu(game)
+
         pygame.display.flip()
