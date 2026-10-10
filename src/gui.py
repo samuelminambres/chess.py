@@ -305,6 +305,53 @@ class Gui:
         card_1v1 = pygame.Rect(card_ai.right + gap, card_y, card_w, card_h)
         pygame.draw.rect(self.display, COLOR_LIGHT, card_1v1)
         self._render_text("1vs1", 48, COLOR_DARK, center=card_1v1.center)
+        
+    def handle_scroll(self, y_offset: int, sens: int = 5):
+        self.scroll_y += y_offset * sens
+
+    def get_menu_selection(self, pos: tuple[int, int]) -> str | None:
+        # Se calculan las mismas cajas definidas en menu()
+        dialog_x = (self.width - 600) // 2
+        dialog_y = (self.height - 400) // 2
+        gap = (600 - (240 * 2)) // 3
+        card_y = dialog_y + 110
+
+        ai_rect = pygame.Rect(dialog_x + gap, card_y, 240, 240)
+        pvp_rect = pygame.Rect(ai_rect.right + gap, card_y, 240, 240)
+
+        if ai_rect.collidepoint(pos):
+            return "ai"
+        if pvp_rect.collidepoint(pos):
+            return "1vs1"
+        return None
+
+    def get_promotion_selection(self, pos: tuple[int, int]) -> str | None:
+        dialog_w, dialog_h = 650, 200
+        dialog_rect = pygame.Rect(0, 0, dialog_w, dialog_h)
+        dialog_rect.center = (self.width // 2, self.height // 2)
+
+        card_size = 120
+        gap = (dialog_w - (card_size * 4)) // 5
+        card_y = dialog_rect.y + (dialog_h - card_size) // 2
+        
+        piece_codes = ["Q", "R", "B", "N"]
+        for i, code in enumerate(piece_codes):
+            card_x = dialog_rect.x + gap + i * (card_size + gap)
+            card_rect = pygame.Rect(card_x, card_y, card_size, card_size)
+            if card_rect.collidepoint(pos):
+                return code
+        return None
+
+    def get_sidebar_button(self, pos: tuple[int, int]) -> str | None:
+        if self.undo_btn_rect.collidepoint(pos):
+            return "undo"
+        if self.restart_btn_rect.collidepoint(pos):
+            return "restart"
+        return None
+
+    def is_in_board(self, pos: tuple[int, int]) -> bool:
+        x, y = pos
+        return 0 <= x < self.panel_x and 0 <= y < self.height
 
     def update_display(self, game, selected_square, promotion, menu):
         if menu:
