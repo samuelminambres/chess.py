@@ -38,6 +38,7 @@ Designed with clean software engineering principles in mind, it features strong 
 - **Game State & Draw Detection:**
   - Real-time Check, Checkmate, and Stalemate evaluation.
   - **50-Move Rule:** Automatic tracking of half-moves without pawn advances or captures.
+  - **Threefold Repetition:** Automatic draw detection upon reaching identical board states three or more times under FIDE criteria.
   - **Insufficient Material:** Detection of automatic draws (K vs K, K+B vs K, K+N vs K).
   - Prevention of any move that places or leaves the player's own king in check.
 - **Artificial Intelligence (Minimax + Alpha-Beta Pruning):**
@@ -62,7 +63,7 @@ The codebase adheres strictly to separation of concerns across 9 dedicated modul
 |---|---|
 | [`src/pieces.py`](src/pieces.py) | **Polymorphic Pieces:** Base `Piece` class and derived classes (`Pawn`, `Knight`, `Bishop`, `Rook`, `Queen`, `King`). Manages directional vectors, piece values, and 8x8 Piece-Square Tables for heuristic evaluation. |
 | [`src/chessboard.py`](src/chessboard.py) | **Board Data Structure:** Encapsulates the 8x8 matrix, piece tracking lists, king position coordinates, en passant target squares, and board-level displacements. |
-| [`src/game.py`](src/game.py) | **Game Rules Orchestrator:** Validates move legality against checks, manages turn alternation, tracks draw conditions (50 moves, stalemate, insufficient material), and executes player moves. |
+| [`src/game.py`](src/game.py) | **Game Rules Orchestrator:** Validates move legality against checks, manages turn alternation, tracks draw conditions (50 moves, stalemate, insufficient material, threefold repetition), and executes player moves. |
 | [`src/move.py`](src/move.py) | **State Snapshot Model:** Captures move coordinates, the moving piece, captured piece, previous en passant state, moved flags, and clock counters for exact undo reconstruction. |
 | [`src/timers.py`](src/timers.py) | **Clock Management:** Implements countdown timers, per-move time increments, timestamp tracking, and formatted `MM:SS` display strings. |
 | [`src/ai.py`](src/ai.py) | **Decision Engine:** Minimax implementation with alpha-beta pruning and heuristic evaluation combining material count with positional piece-square matrix weights. |
