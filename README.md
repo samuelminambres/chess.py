@@ -76,7 +76,7 @@ The codebase adheres strictly to separation of concerns across 9 dedicated modul
 ## Project Structure
 
 ```text
-chess.py/
+python-chess-engine/
 ├── assets/
 │   ├── demo/               # Gameplay demonstrations and screenshots
 │   │   ├── gameplay.gif
@@ -114,8 +114,8 @@ chess.py/
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/samuelminambres/chess.py.git
-   cd chess.py
+   git clone https://github.com/samuelminambres/python-chess-engine.git
+   cd python-chess-engine
    ```
 
 2. **Create and activate a virtual environment (recommended):**
